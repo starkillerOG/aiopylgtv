@@ -2,7 +2,7 @@
 Library to control webOS based LG Tv devices
 
 ## Requirements
-- Python >= 3.3
+- Python >= 3.8
 
 ## Install
 ```
@@ -12,19 +12,18 @@ pip install pylgtv
 ## Example
 
 ```python
+import asyncio
 from pylgtv import WebOsClient
 
-import sys
-import logging
-
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
-try:
-    webos_client = WebOsClient('192.168.0.112')
-    #webos_client.launch_app('netflix')
-
-    for app in webos_client.get_apps():
+async def runloop(client):
+    await client.connect()
+    apps = await client.get_apps()
+    for app in apps:
         print(app)
-except:
-    print("Error connecting to TV")
+    
+    await client.disconnect()
+
+client = WebOsClient('192.168.1.53', timeout_connect=2)            
+asyncio.get_event_loop().run_until_complete(runloop(client))
+
 ```
