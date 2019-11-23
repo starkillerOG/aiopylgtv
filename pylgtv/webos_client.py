@@ -140,9 +140,7 @@ class WebOsClient(object):
     async def disconnect(self):
         if self.is_connected():
             self.connect_task.cancel()
-            print("disconnect: disconnecting")
             await self.connect_task
-            print("disconnect: disconnected")
         
     def is_registered(self):
         """Paired with the tv."""
@@ -162,14 +160,11 @@ class WebOsClient(object):
         ws = None
         inputws = None
         try:
-            print("trying to connect")
             ws = await asyncio.wait_for(websockets.connect(f"ws://{self.ip}:{self.port}",
                                                     ping_interval=None,
                                                     close_timeout=self.timeout_connect),
                                 timeout = self.timeout_connect)
-            print("sending reg msg")
             await ws.send(json.dumps(self.registration_msg()))
-            print("awaiting response")
             raw_response = await ws.recv()
             response = json.loads(raw_response)
 
@@ -187,7 +182,6 @@ class WebOsClient(object):
             self.callbacks = {}
             self.futures = {}
             
-            print("starting listener")
             handler_tasks.add(asyncio.create_task(self.consumer_handler(ws,self.callbacks,self.futures)))
             if self.ping_interval is not None:
                 handler_tasks.add(asyncio.create_task(self.ping_handler(ws, self.ping_interval)))
@@ -231,7 +225,6 @@ class WebOsClient(object):
             if not res.done():
                 res.set_exception(ex)
         finally:
-            print("disconnecting")
             for task in handler_tasks:
                 if not task.done():
                     task.cancel()
@@ -263,7 +256,6 @@ class WebOsClient(object):
                 closeout.add(callback())
             
             if closeout:
-                print("closeout")
                 closeout_task = asyncio.create_task(asyncio.wait(closeout))
                 
                 while not closeout_task.done():
@@ -271,14 +263,12 @@ class WebOsClient(object):
                         await asyncio.shield(closeout_task)
                     except asyncio.CancelledError:
                         pass
-            print("disconnected")
 
     async def ping_handler(self, ws, interval=20):
         try:
             while True:
                 await asyncio.sleep(interval)
                 if self.current_appId != "" or not self.standby_connection:
-                    print("pinging")
                     ping_waiter = await ws.ping()
                     await asyncio.wait_for(ping_waiter, timeout = self.timeout_connect)
         except (asyncio.TimeoutError, asyncio.CancelledError, websockets.exceptions.ConnectionClosedError):
