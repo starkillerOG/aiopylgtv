@@ -861,16 +861,16 @@ class WebOsClient(object):
         return await self.calibration_request(command, picMode, data, nPadding=1)
     
     async def set_brightness(self, picMode, value=50):
-        return await set_ui_data("BRIGHTNESS_UI_DATA", picMode, data)
+        return await self.set_ui_data("BRIGHTNESS_UI_DATA", picMode, value)
 
     async def set_contrast(self, picMode, value=85):
-        return await set_ui_data("CONTRAST_UI_DATA", picMode, data)
+        return await self.set_ui_data("CONTRAST_UI_DATA", picMode, value)
 
     async def set_oled_light(self, picMode, value=80):
-        return await set_ui_data("BACKLIGHT_UI_DATA", picMode, data)
+        return await self.set_ui_data("BACKLIGHT_UI_DATA", picMode, value)
 
     async def set_color(self, picMode, value=50):
-        return await set_ui_data("COLOR_UI_DATA", picMode, data)
+        return await self.set_ui_data("COLOR_UI_DATA", picMode, value)
 
     async def ddc_reset(self, picMode):
         await self.start_calibration(picMode)
