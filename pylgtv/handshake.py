@@ -34,7 +34,11 @@ REGISTRATION_PAYLOAD = {
             "READ_TV_CHANNEL_LIST",
             "WRITE_NOTIFICATION_TOAST",
             "READ_POWER_STATE",
-            "READ_COUNTRY_INFO"
+            "READ_COUNTRY_INFO",
+            "CONTROL_INPUT_TEXT",
+            "CONTROL_MOUSE_AND_KEYBOARD", 
+            "READ_INSTALLED_APPS",
+            "READ_SETTINGS",
         ],
         "signatures": [
             {

@@ -7,11 +7,14 @@ import websockets
 import logging
 import sys
 import copy
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
 from .endpoints import *
+from .constants import CALIBRATION_TYPE_MAP, DEFAULT_CAL_DATA
 from .handshake import REGISTRATION_MESSAGE
+from .lut_tools import unity_lut_1d, unity_lut_3d, read_cube_file, read_cal_file
 
 KEY_FILE_NAME = '.pylgtv'
 USER_HOME = 'HOME'
@@ -23,7 +26,8 @@ class PyLGTVPairException(Exception):
         self.message = message
         
 class PyLGTVCmdException(Exception):
-    pass
+    def __init__(self, message):
+        self.message = message
 
 class WebOsClient(object):
     def __init__(self, ip, key_file_path=None, timeout_connect=2, timeout_request=10, ping_interval=20, standby_connection = False):
@@ -50,6 +54,8 @@ class WebOsClient(object):
         self._current_channel = None
         self._apps = {}
         self._extinputs = {}
+        self._system_info = None
+        self._software_info = None
         self.state_update_callbacks = []
         self.doStateUpdate = False
 
@@ -182,7 +188,7 @@ class WebOsClient(object):
                 handler_tasks.add(asyncio.create_task(self.ping_handler(inputws, self.ping_interval)))
             self.input_connection = inputws
             
-            #subscribe to state updates
+            #set static state and subscribe to state updates
             #avoid partial updates during initial subscription
             
             self.doStateUpdate = False
@@ -192,6 +198,8 @@ class WebOsClient(object):
                                  self.subscribe_current_channel(self.set_current_channel_state),
                                  self.subscribe_apps(self.set_apps_state),
                                  self.subscribe_inputs(self.set_inputs_state),
+                                 self.subscribe_system_info(self.set_system_info),
+                                 self.subscribe_software_info(self.set_software_info),
                                  )
             self.doStateUpdate = True
             if self.state_update_callbacks:
@@ -229,6 +237,7 @@ class WebOsClient(object):
             self._current_channel = None
             self._apps = {}
             self._extinputs = {}
+            self._modelName = None
             
             self.doStateUpdate = True
             
@@ -263,7 +272,7 @@ class WebOsClient(object):
                     payload = msg.get('payload')
                     if uid in self.callbacks:
                         await self.callbacks[uid](payload)
-                    if uid in self.futures:
+                    if uid in self.futures: 
                         self.futures[uid].set_result(payload)
         except (websockets.exceptions.ConnectionClosedError, asyncio.CancelledError):
             pass
@@ -293,6 +302,61 @@ class WebOsClient(object):
     def inputs(self):
         return self._extinputs
     
+    @property
+    def system_info(self):
+        return self._system_info
+    
+    @property
+    def software_info(self):
+        return self._software_info
+    
+    def calibration_support_info(self):
+        info = { "lut1d" : False,
+                 "lut3d_size" : None,
+                 "custom_tone_mapping" : False,
+                 "dv_config_type" : None,
+                 }
+        model_name = self._system_info["modelName"]
+        if model_name.startswith("OLED") and len(model_name)>7:
+            model = model_name[6]
+            year = int(model_name[7])
+            if year >= 8:
+                info["lut1d"] = True
+                if model == "B":
+                    info["lut3d_size"] = 17
+                else:
+                    info["lut3d_size"] = 33
+            if year == 8:
+                info["dv_config_type"] = 2018
+            elif year == 9:
+                info["custom_tone_mapping"] = True
+                info["dv_config_type"] = 2019
+        elif len(model_name)>5:
+            size = None
+            try:
+                size = int(model_name[0:2])
+            except ValueError:
+                pass
+            if size:
+                modeltype = model_name[2]
+                modelyear = model_name[3]
+                modelseries = model_name[4]
+                modelnumber = model_name[5]
+                
+                if modeltype=="S" and modelyear in ["K", "M"] and modelseries>=8:
+                    info["lut1d"] = True
+                    if modelseries==9 and modelnumber==9:
+                        info["lut3d_size"] = 33
+                    else:
+                        info["lut3d_size"] = 17
+                    if modelyear == "K":
+                        info["dv_config_type"] = 2018
+                    elif modelyear == "M":
+                        info["custom_tone_mapping"] = True
+                        info["dv_config_type"] = 2019
+     
+        return info
+
     async def register_state_update_callback(self, callback):
         self.state_update_callbacks.append(callback)
         if self.doStateUpdate:
@@ -353,6 +417,12 @@ class WebOsClient(object):
         if self.state_update_callbacks and self.doStateUpdate:
             await self.do_state_update_callbacks()
 
+    async def set_system_info(self, system_info):
+        self._system_info = system_info
+        
+    async def set_software_info(self, software_info):
+        self._software_info = software_info
+
     #low level request handling
 
     async def command(self, request_type, uri, payload=None, uid=None):
@@ -367,12 +437,12 @@ class WebOsClient(object):
         message = {
             'id': uid,
             'type': request_type,
-            'uri': "ssap://{}".format(uri),
+            'uri': f"ssap://{uri}",
             'payload': payload,
         }
         
         if self.connection is None:
-            raise PyLGTVCmdException()
+            raise PyLGTVCmdException("Not connected, can't execute command.")
 
         await self.connection.send(json.dumps(message))
 
@@ -385,7 +455,7 @@ class WebOsClient(object):
         self.futures[uid] = res
         try:
             await self.command(cmd_type, uri, payload, uid)
-        except PyLGTVCmdException:
+        except PyLGTVCmdException("Couldn't execute command"):
             del self.futures[uid]
             raise
         try:
@@ -406,7 +476,7 @@ class WebOsClient(object):
     
     async def input_command(self, message):
         if self.input_connection is None:
-            raise PyLGTVCmdException()
+            raise PyLGTVCmdException("Couldn't execute input command.")
         
         await self.input_connection.send(message)
     
@@ -514,6 +584,18 @@ class WebOsClient(object):
     async def get_software_info(self):
         """Return the current software status."""
         return await self.request(EP_GET_SOFTWARE_INFO)
+
+    async def subscribe_software_info(self, callback):
+        """Subscribe to system information updates."""
+        return await self.subscribe(callback, EP_GET_SOFTWARE_INFO)
+
+    async def get_system_info(self):
+        """Return the system information."""
+        return await self.request(EP_GET_SYSTEM_INFO)
+
+    async def subscribe_system_info(self, callback):
+        """Subscribe to system information updates."""
+        return await self.subscribe(callback, EP_GET_SYSTEM_INFO)
 
     async def power_off(self, disconnect=None):
         """Power off TV."""
@@ -784,4 +866,127 @@ class WebOsClient(object):
             raise ValueError
         
         await self.button(f"""{num}""")
+    
+    def validateCalibrationData(self, data, shape, dtype):
+        if type(data) is not np.ndarray:
+            raise TypeError
+        if data.shape != shape:
+            raise ValueError
+        if data.dtype != dtype:
+            raise TypeError
+
+    async def calibration_request(self, command, picMode, data, nPadding=0):
+        dataenc = base64.b64encode(data.tobytes()).decode()
+
+        payload = {
+                "command" : command,
+                "data" : dataenc,
+                "dataCount" : data.size,
+                "dataOpt" : 1,
+                "dataType" : CALIBRATION_TYPE_MAP[data.dtype.name],
+                "profileNo" : 0,
+                "programID" : 1,
+                "picMode" : picMode,
+            }
         
+        return await self.request(EP_CALIBRATION, payload)
+
+    async def start_calibration(self, picMode, data=DEFAULT_CAL_DATA):
+        self.validateCalibrationData(data, (9,), np.float32)
+        return await self.calibration_request("CAL_START", picMode, data)
+    
+    async def end_calibration(self, picMode, data=DEFAULT_CAL_DATA):
+        self.validateCalibrationData(data, (9,), np.float32)
+        return await self.calibration_request("CAL_END", picMode, data)
+    
+    async def upload_1d_lut(self, picMode, data=None):
+        info = self.calibration_support_info()
+        if not info["lut1d"]:
+            model = self._system_info["modelName"]
+            raise PyLGTVCmdException(f"1D LUT Upload not supported by tv model {model}.")
+        if data is None:
+            data = unity_lut_1d()
+        self.validateCalibrationData(data, (3,1024), np.uint16)
+        return await self.calibration_request("1D_DPG_DATA", picMode, data)
+
+    async def upload_3d_lut(self, command, picMode, data):
+        if command not in ["BT709_3D_LUT_DATA", "BT2020_3D_LUT_DATA"]:
+            raise PyLGTVCmdException(f"Invalid 3D LUT Upload command {command}.")
+        info = self.calibration_support_info()
+        lut3d_size = info["lut3d_size"]
+        if not lut3d_size:
+            model = self._system_info["modelName"]
+            raise PyLGTVCmdException(f"3D LUT Upload not supported by tv model {model}.")        
+        if data is None:
+            data = unity_lut_3d(lut3d_size)
+        lut3d_shape = (lut3d_size,lut3d_size,lut3d_size,3)
+        self.validateCalibrationData(data, lut3d_shape, np.uint16)
+        return await self.calibration_request(command, picMode, data)        
+
+    async def upload_3d_lut_bt709(self, picMode, data=None):
+        return await self.upload_3d_lut("BT709_3D_LUT_DATA", picMode, data)
+    
+    async def upload_3d_lut_bt2020(self, picMode, data=None):
+        return await self.upload_3d_lut("BT2020_3D_LUT_DATA", picMode, data)
+    
+    async def set_ui_data(self, command, picMode, value):
+        if not (value>=0 and value <=100):
+            raise ValueError
+        
+        data = np.array(value, dtype=np.uint16)
+        return await self.calibration_request(command, picMode, data)
+    
+    async def set_brightness(self, picMode, value=50):
+        return await self.set_ui_data("BRIGHTNESS_UI_DATA", picMode, value)
+
+    async def set_contrast(self, picMode, value=85):
+        return await self.set_ui_data("CONTRAST_UI_DATA", picMode, value)
+
+    async def set_oled_light(self, picMode, value=80):
+        return await self.set_ui_data("BACKLIGHT_UI_DATA", picMode, value)
+
+    async def set_color(self, picMode, value=50):
+        return await self.set_ui_data("COLOR_UI_DATA", picMode, value)
+
+    async def ddc_reset(self, picMode):
+        await self.set_brightness(picMode)
+        await self.set_contrast(picMode)
+        await self.set_oled_light(picMode)
+        await self.set_color(picMode)
+        await self.upload_1d_lut(picMode)
+        await self.upload_3d_lut_bt709(picMode)
+        await self.upload_3d_lut_bt2020(picMode)
+
+    async def get_picture_settings(self, keys=["contrast","backlight","brightness","color"]):
+        payload = {
+                "category" : "picture",
+                "keys" : keys,
+            }
+        ret = await self.request(EP_GET_SYSTEM_SETTINGS, payload=payload)
+        return ret["settings"]
+    
+    async def upload_1d_lut_from_file(self, picMode, filename):
+        ext = filename.split(".")[-1].lower()
+        if ext == "cal":
+            lut = read_cal_file(filename)
+        elif ext == "cube":
+            lut = read_cube_file(filename)
+        else:
+            raise ValueError(f"Unsupported file format {ext} for 1D LUT.  Supported file formats are cal and cube.")
+        
+        return await self.upload_1d_lut(picMode, lut)
+    
+    async def upload_3d_lut_from_file(self, command, picMode, filename):
+        ext = filename.split(".")[-1].lower()
+        if ext == "cube":
+            lut = read_cube_file(filename)
+        else:
+            raise ValueError(f"Unsupported file format {ext} for 3D LUT.  Supported file formats are cube.")
+        
+        return await self.upload_3d_lut(command, picMode, lut)
+    
+    async def upload_3d_lut_bt709_from_file(self, picMode, filename):
+        return await self.upload_3d_lut_from_file("BT709_3D_LUT_DATA", picMode, filename)
+    
+    async def upload_3d_lut_bt2020_from_file(self, picMode, filename):
+        return await self.upload_3d_lut_from_file("BT2020_3D_LUT_DATA", picMode, filename)
