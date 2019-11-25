@@ -7,10 +7,12 @@ import websockets
 import logging
 import sys
 import copy
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
 from .endpoints import *
+from .constants import *
 from .handshake import REGISTRATION_MESSAGE
 
 KEY_FILE_NAME = '.pylgtv'
@@ -387,7 +389,7 @@ class WebOsClient(object):
         message = {
             'id': uid,
             'type': request_type,
-            'uri': "ssap://{}".format(uri),
+            'uri': uri,
             'payload': payload,
         }
         
@@ -804,4 +806,87 @@ class WebOsClient(object):
             raise ValueError
         
         await self.button(f"""{num}""")
+    
+    def validateCalibrationData(self, data, shape, dtype):
+        if type(data) is not np.ndarray:
+            raise TypeError
+        if data.shape != shape:
+            raise ValueError
+        if data.dtype != dtype:
+            raise TypeError
+
+    async def calibration_request(self, command, picMode, data, nPadding=0):
+        dataenc = base64.b64encode(data.tobytes()).decode()
+        for i in range(nPadding):
+            dataenc += "="
+        print(dataenc)
+           
+        payload = {
+                "command" : command,
+                "data" : dataenc,
+                "dataCount" : data.size,
+                "dataOpt" : 1,
+                "dataType" : CALIBRATION_TYPE_MAP[data.dtype],
+                "profileNo" : 0,
+                "programID" : 1,
+                "picMode" : picMode,
+            }
         
+        return await self.request(EP_CALIBRATION, payload)
+
+    async def start_calibration(self, picMode, data=DEFAULT_CAL_DATA):
+        self.validateCalibrationData(data, (9,), np.float32)
+        return await self.calibration_request("CAL_START", picMode, data)
+    
+    async def end_calibration(self, picMode, data=DEFAULT_CAL_DATA):
+        self.validateCalibrationData(data, (9,), np.float32)
+        return await self.calibration_request("CAL_END", picMode, data)
+    
+    async def upload_1d_lut(self, picMode, data=UNITY_1D_LUT):
+        self.validateCalibrationData(data, (3,1024), np.uint16)
+        return await self.calibration_request("1D_DPG_DATA", picMode, data)
+    
+    async def upload_3d_lut_bt709(self, command, picMode, data=UNITY_3D_LUT):
+        self.validateCalibrationData(data, (33,33,33,3), np.uint16)
+        return await self.calibration_request("BT709_3D_LUT_DATA", picMode, data)
+    
+    async def upload_3d_lut_bt2020(self, command, picMode, data=UNITY_3D_LUT):
+        self.validateCalibrationData(data, (33,33,33,3), np.uint16)
+        return await self.calibration_request("BT2020_3D_LUT_DATA", picMode, data)
+    
+    async def set_ui_data(self, command, picMode, value):
+        if not (value>=0 and value <=100):
+            raise ValueError
+        data = np.array(value<<10, dtype=np.uint16)
+        return await self.calibration_request(command, picMode, data, nPadding=1)
+    
+    async def set_brightness(self, picMode, value=50):
+        return await set_ui_data("BRIGHTNESS_UI_DATA", picMode, data)
+
+    async def set_contrast(self, picMode, value=85):
+        return await set_ui_data("CONTRAST_UI_DATA", picMode, data)
+
+    async def set_oled_light(self, picMode, value=80):
+        return await set_ui_data("BACKLIGHT_UI_DATA", picMode, data)
+
+    async def set_color(self, picMode, value=50):
+        return await set_ui_data("COLOR_UI_DATA", picMode, data)
+
+    async def ddc_reset(self, picMode):
+        await self.start_calibration(picMode)
+        await self.set_brightness(picMode)
+        await self.set_contrast(picMode)
+        await self.set_oled_light(picMode)
+        await self.set_color(picMode)
+        await self.upload_1d_lut(picMode)
+        await self.upload_3d_lut_bt709(picMode)
+        await self.upload_3d_lut_bt2020(picMode)
+        await self.end_calibration(picMode)
+
+    async def get_picture_settings(self, keys=["contrast","backlight","brightness","color"]):
+        payload = {
+                "category" : "picture",
+                "keys" : keys,
+            }
+        ret = await request(EP_GET_SYSTEM_SETTINGS, payload)
+        return ret["settings"]
