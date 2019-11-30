@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
       name = 'pylgtv',
       packages = ['pylgtv'],
-      install_requires = ['websockets', 'asyncio'],
+      install_requires = ['websockets', 'asyncio', 'numpy'],
       zip_safe = True,
       version = '0.2.0b1',
       description = 'Library to control webOS based LG Tv devices',
