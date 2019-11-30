@@ -930,6 +930,9 @@ class WebOsClient(object):
         return await self.upload_3d_lut("BT2020_3D_LUT_DATA", picMode, data)
     
     async def set_ui_data(self, command, picMode, value):
+        if isinstance(value, str):
+            value = int(value)
+        
         if not (value>=0 and value <=100):
             raise ValueError
         

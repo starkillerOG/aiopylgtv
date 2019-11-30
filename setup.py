@@ -1,10 +1,8 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
       name = 'pylgtv',
       packages = ['pylgtv'],
-      package_dir = {'pylgtv': 'pylgtv'},
-      package_data = {'pylgtv': ['handshake.json']},
       install_requires = ['websockets', 'asyncio'],
       zip_safe = True,
       version = '0.1.9',
@@ -15,4 +13,9 @@ setup(
       download_url = 'https://github.com/TheRealLink/pylgtv/archive/0.1.9.tar.gz',
       keywords = ['webos', 'tv'],
       classifiers = [],
+      entry_points={
+        'console_scripts': [
+            'pylgtvcommand=pylgtv.utils:pylgtvcommand',
+        ],
+      },
 )
