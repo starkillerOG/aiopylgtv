@@ -514,7 +514,7 @@ class WebOsClient(object):
             with open(icon_path, 'rb') as icon_file:
                 icon_encoded_string = base64.b64encode(icon_file.read()).decode('ascii')
 
-        await self.request(EP_SHOW_MESSAGE, {
+        return await self.request(EP_SHOW_MESSAGE, {
             'message': message,
             'iconData': icon_encoded_string,
             'iconExtension': icon_extension
@@ -549,27 +549,27 @@ class WebOsClient(object):
 
     async def launch_app(self, app):
         """Launch an app."""
-        await self.request(EP_LAUNCH, {
+        return await self.request(EP_LAUNCH, {
             'id': app
         })
 
     async def launch_app_with_params(self, app, params):
         """Launch an app with parameters."""
-        await self.request(EP_LAUNCH, {
+        return await self.request(EP_LAUNCH, {
             'id': app,
             'params': params
         })
 
     async def launch_app_with_content_id(self, app, contentId):
         """Launch an app with contentId."""
-        await self.request(EP_LAUNCH, {
+        return await self.request(EP_LAUNCH, {
             'id': app,
             'contentId': contentId
         })
 
     async def close_app(self, app):
         """Close the current app."""
-        await self.request(EP_LAUNCHER_CLOSE, {
+        return await self.request(EP_LAUNCHER_CLOSE, {
             'id': app
         })
 
@@ -609,20 +609,20 @@ class WebOsClient(object):
         else:
             #if standby++ option is enabled, connection stays open
             #and TV responds gracefully to power off request
-            await self.request(EP_POWER_OFF)
+            return await self.request(EP_POWER_OFF)
 
     async def power_on(self):
         """Play media."""
-        await self.request(EP_POWER_ON)
+        return await self.request(EP_POWER_ON)
 
     # 3D Mode
     async def turn_3d_on(self):
         """Turn 3D on."""
-        await self.request(EP_3D_ON)
+        return await self.request(EP_3D_ON)
 
     async def turn_3d_off(self):
         """Turn 3D off."""
-        await self.request(EP_3D_OFF)
+        return await self.request(EP_3D_OFF)
 
     # Inputs
     async def get_inputs(self):
@@ -644,7 +644,7 @@ class WebOsClient(object):
 
     async def set_input(self, input):
         """Set the current input."""
-        await self.request(EP_SET_INPUT, {
+        return await self.request(EP_SET_INPUT, {
             'inputId': input
         })
 
@@ -668,7 +668,7 @@ class WebOsClient(object):
 
     async def set_mute(self, mute):
         """Set mute."""
-        await self.request(EP_SET_MUTE, {
+        return await self.request(EP_SET_MUTE, {
             'mute': mute
         })
 
@@ -688,26 +688,26 @@ class WebOsClient(object):
     async def set_volume(self, volume):
         """Set volume."""
         volume = max(0, volume)
-        await self.request(EP_SET_VOLUME, {
+        return await self.request(EP_SET_VOLUME, {
             'volume': volume
         })
 
     async def volume_up(self):
         """Volume up."""
-        await self.request(EP_VOLUME_UP)
+        return await self.request(EP_VOLUME_UP)
 
     async def volume_down(self):
         """Volume down."""
-        await self.request(EP_VOLUME_DOWN)
+        return await self.request(EP_VOLUME_DOWN)
 
     # TV Channel
     async def channel_up(self):
         """Channel up."""
-        await self.request(EP_TV_CHANNEL_UP)
+        return await self.request(EP_TV_CHANNEL_UP)
 
     async def channel_down(self):
         """Channel down."""
-        await self.request(EP_TV_CHANNEL_DOWN)
+        return await self.request(EP_TV_CHANNEL_DOWN)
 
     async def get_channels(self):
         """Get all tv channels."""
@@ -728,54 +728,54 @@ class WebOsClient(object):
 
     async def set_channel(self, channel):
         """Set the current channel."""
-        await self.request(EP_SET_CHANNEL, {
+        return await self.request(EP_SET_CHANNEL, {
             'channelId': channel
         })
 
     # Media control
     async def play(self):
         """Play media."""
-        await self.request(EP_MEDIA_PLAY)
+        return await self.request(EP_MEDIA_PLAY)
 
     async def pause(self):
         """Pause media."""
-        await self.request(EP_MEDIA_PAUSE)
+        return await self.request(EP_MEDIA_PAUSE)
 
     async def stop(self):
         """Stop media."""
-        await self.request(EP_MEDIA_STOP)
+        return await self.request(EP_MEDIA_STOP)
 
     async def close(self):
         """Close media."""
-        await self.request(EP_MEDIA_CLOSE)
+        return await self.request(EP_MEDIA_CLOSE)
 
     async def rewind(self):
         """Rewind media."""
-        await self.request(EP_MEDIA_REWIND)
+        return await self.request(EP_MEDIA_REWIND)
 
     async def fast_forward(self):
         """Fast Forward media."""
-        await self.request(EP_MEDIA_FAST_FORWARD)
+        return await self.request(EP_MEDIA_FAST_FORWARD)
 
     # Keys
     async def send_enter_key(self):
         """Send enter key."""
-        await self.request(EP_SEND_ENTER)
+        return await self.request(EP_SEND_ENTER)
 
     async def send_delete_key(self):
         """Send delete key."""
-        await self.request(EP_SEND_DELETE)
+        return await self.request(EP_SEND_DELETE)
 
     # Web
     async def open_url(self, url):
         """Open URL."""
-        await self.request(EP_OPEN, {
+        return await self.request(EP_OPEN, {
             'target': url
         })
 
     async def close_web(self):
         """Close web app."""
-        await self.request(EP_CLOSE_WEB_APP)
+        return await self.request(EP_CLOSE_WEB_APP)
     
     #Emulated button presses
     async def left_button(self):
