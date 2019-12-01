@@ -190,15 +190,20 @@ class WebOsClient(object):
             #avoid partial updates during initial subscription
             
             self.doStateUpdate = False
+            self._system_info, self._software_info = await asyncio.gather(self.get_system_info(),
+                                                                          self.get_software_info(),
+                                                                          )
             await asyncio.gather(self.subscribe_current_app(self.set_current_app_state),
                                  self.subscribe_muted(self.set_muted_state),
                                  self.subscribe_volume(self.set_volume_state),
-                                 self.subscribe_current_channel(self.set_current_channel_state),
                                  self.subscribe_apps(self.set_apps_state),
                                  self.subscribe_inputs(self.set_inputs_state),
-                                 self.subscribe_system_info(self.set_system_info),
-                                 self.subscribe_software_info(self.set_software_info),
                                  )
+            #Channel state subscription may not work in all cases
+            try:
+                await self.subscribe_current_channel(self.set_current_channel_state)
+            except PyLGTVCmdException:
+                pass
             self.doStateUpdate = True
             if self.state_update_callbacks:
                 await self.do_state_update_callbacks()
@@ -215,7 +220,7 @@ class WebOsClient(object):
                 if not task.done():
                     task.cancel()
                     
-            for future in self.futures:
+            for future in self.futures.values():
                 future.cancel()
             
             closeout = set()
@@ -235,7 +240,8 @@ class WebOsClient(object):
             self._current_channel = None
             self._apps = {}
             self._extinputs = {}
-            self._modelName = None
+            self._system_info = None
+            self._software_info = None
             
             self.doStateUpdate = True
             
@@ -267,11 +273,11 @@ class WebOsClient(object):
                 if callbacks or futures:
                     msg = json.loads(raw_msg)
                     uid = msg.get('id')
-                    payload = msg.get('payload')
                     if uid in self.callbacks:
+                        payload = msg.get('payload')
                         await self.callbacks[uid](payload)
                     if uid in self.futures: 
-                        self.futures[uid].set_result(payload)
+                        self.futures[uid].set_result(msg)
         except (websockets.exceptions.ConnectionClosedError, asyncio.CancelledError):
             pass
 
@@ -415,12 +421,6 @@ class WebOsClient(object):
         if self.state_update_callbacks and self.doStateUpdate:
             await self.do_state_update_callbacks()
 
-    async def set_system_info(self, system_info):
-        self._system_info = system_info
-        
-    async def set_software_info(self, software_info):
-        self._software_info = software_info
-
     #low level request handling
 
     async def command(self, request_type, uri, payload=None, uid=None):
@@ -463,14 +463,35 @@ class WebOsClient(object):
                 del self.futures[uid]
             raise
         del self.futures[uid]
-        return response
-    
+        
+        payload = response.get('payload')
+        if payload is None:
+            raise PyLGTVCmdException(f"Invalid request response {response}")
+        
+        if cmd_type == 'request':
+            returnValue = payload.get('returnValue')
+        elif cmd_type == 'subscribe':
+            returnValue = payload.get('subscribed')
+        else:
+            returnValue = None
+            
+        if returnValue is None:
+            raise PyLGTVCmdException(f"Invalid request response {response}")
+        elif not returnValue:
+            raise PyLGTVCmdException(f"Request failed with response {response}")
+
+        return payload
+
     async def subscribe(self, callback, uri, payload=None):
         """Subscribe to updates."""
         uid = self.command_count
         self.command_count += 1
         self.callbacks[uid] = callback
-        return await self.request(uri, payload=payload, cmd_type='subscribe', uid=uid)
+        try:
+            return await self.request(uri, payload=payload, cmd_type='subscribe', uid=uid)
+        except:
+            del self.callbacks[uid]
+            raise
     
     async def input_command(self, message):
         if self.input_connection is None:
@@ -583,17 +604,9 @@ class WebOsClient(object):
         """Return the current software status."""
         return await self.request(EP_GET_SOFTWARE_INFO)
 
-    async def subscribe_software_info(self, callback):
-        """Subscribe to system information updates."""
-        return await self.subscribe(callback, EP_GET_SOFTWARE_INFO)
-
     async def get_system_info(self):
         """Return the system information."""
         return await self.request(EP_GET_SYSTEM_INFO)
-
-    async def subscribe_system_info(self, callback):
-        """Subscribe to system information updates."""
-        return await self.subscribe(callback, EP_GET_SYSTEM_INFO)
 
     async def power_off(self, disconnect=None):
         """Power off TV."""
