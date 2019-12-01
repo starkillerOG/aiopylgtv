@@ -16,7 +16,7 @@ from .constants import CALIBRATION_TYPE_MAP, DEFAULT_CAL_DATA
 from .handshake import REGISTRATION_MESSAGE
 from .lut_tools import unity_lut_1d, unity_lut_3d, read_cube_file, read_cal_file
 
-KEY_FILE_NAME = '.pylgtv'
+KEY_FILE_NAME = '.aiopylgtv'
 USER_HOME = 'HOME'
 HANDSHAKE_FILE_NAME = 'handshake.json'
 

@@ -1,19 +1,19 @@
-# pylgtv
-Library to control webOS based LG Tv devices
+# aiopylgtv
+Library to control webOS based LG Tv devices.  Based on pylgtv library at https://github.com/TheRealLink/pylgtv/tree/master/pylgtv which is no longer maintained.
 
 ## Requirements
 - Python >= 3.8
 
 ## Install
 ```
-pip install pylgtv
+pip install aiopylgtv
 ```
 
 ## Example
 
 ```python
 import asyncio
-from pylgtv import WebOsClient
+from aiopylgtv import WebOsClient
 
 async def runloop(client):
     await client.connect()
