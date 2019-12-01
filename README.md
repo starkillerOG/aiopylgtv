@@ -74,18 +74,20 @@ All of the currently implemented functions SHOULD be safe, but no guarantees.
 
 On supported models, calibration functionality and upload to internal LUTs is supported.
 
-Not yet supported:
--Dolby Vision config upload
+Not yet supported:  
+-Dolby Vision config upload  
 -Custom tone mapping for 2019 models (functionality does not exist on 2018 models)
 
-Supported models:
-LG 2019 Alpha 9 G2 OLED R9 Z9 W9 W9S E9 C9 NanoCell SM99
-LG 2019 Alpha 7 G2 NanoCell (8000 & higher model numbers)
-LG 2018 Alpha 7 Super UHD LED (8000 & higher model numbers)
-LG 2018 Alpha 7 OLED B8
-LG 2018 Alpha 9 OLED C8 E8 G8 W8
+Supported models:  
+LG 2019 Alpha 9 G2 OLED R9 Z9 W9 W9S E9 C9 NanoCell SM99  
+LG 2019 Alpha 7 G2 NanoCell (8000 & higher model numbers)  
+LG 2018 Alpha 7 Super UHD LED (8000 & higher model numbers)  
+LG 2018 Alpha 7 OLED B8  
+LG 2018 Alpha 9 OLED C8 E8 G8 W8  
 
 Models with Alpha 9 use 33 point 3D LUTs, while those with Alpha 7 use 17 points.
+
+n.b. this has only been extensively tested for the 2018 Alpha 9 case, so fixes may be needed still for the others.
 
 WARNING:  When running the ddc_reset or uploading LUT data on 2018 models the only way to restore the factory
 LUTs and behaviour for a given input mode is to do a factory reset of the TV.
