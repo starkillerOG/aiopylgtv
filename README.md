@@ -1,7 +1,7 @@
 # aiopylgtv
 Library to control webOS based LG Tv devices.
 
-Based on pylgtv library at https://github.com/TheRealLink/pylgtv/tree/master/pylgtv which is no longer maintained.
+Based on pylgtv library at https://github.com/TheRealLink/pylgtv which is no longer maintained.
 
 ## Requirements
 - Python >= 3.8
@@ -72,7 +72,7 @@ asyncio.get_event_loop().run_until_complete(runloop())
 WARNING: Messing with the calibration data COULD brick your TV in some circumstances, requiring a mainboard replacement.
 All of the currently implemented functions SHOULD be safe, but no guarantees.
 
-On supported models, calibration functionality and upload to internal LUTs is supported.
+On supported models, calibration functionality and upload to internal LUTs is supported.  The supported input formats for LUTs are IRIDAS .cube format for both 1D and 3D LUTs, and ArgyllCMS .cal files for 1D LUTs.
 
 Not yet supported:  
 -Dolby Vision config upload  
@@ -129,9 +129,9 @@ async def runloop():
     await client.ddc_reset(picMode = "expert1")
     await client.set_oled_light(picMode = "expert1", value = 26)
     await client.set_contrast(picMode = "expert1", value = 100)
-    await client.upload_1d_lut_from_file(picMode = "expert1", filename = "/home/bendavid/mitm/test.cal")
-    await client.upload_3d_lut_bt709_from_file(picMode = "expert1", filename = "/home/bendavid/mitm/test3d.cube")
-    await client.upload_3d_lut_bt2020_from_file(picMode = "expert1", filename = "/home/bendavid/mitm/test3d.cube")
+    await client.upload_1d_lut_from_file(picMode = "expert1", filename = "test.cal")
+    await client.upload_3d_lut_bt709_from_file(picMode = "expert1", filename = "test3d.cube")
+    await client.upload_3d_lut_bt2020_from_file(picMode = "expert1", filename = "test3d.cube")
     await client.end_calibration(picMode = "expert1")
     
     await client.disconnect()
