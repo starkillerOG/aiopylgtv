@@ -18,7 +18,6 @@ from .lut_tools import unity_lut_1d, unity_lut_3d, read_cube_file, read_cal_file
 
 KEY_FILE_NAME = '.aiopylgtv'
 USER_HOME = 'HOME'
-HANDSHAKE_FILE_NAME = 'handshake.json'
 
 class PyLGTVPairException(Exception):
     def __init__(self, id, message):
@@ -30,7 +29,7 @@ class PyLGTVCmdException(Exception):
         self.message = message
 
 class WebOsClient(object):
-    def __init__(self, ip, key_file_path=None, timeout_connect=2, timeout_request=10, ping_interval=20, standby_connection = False):
+    def __init__(self, ip, key_file_path=None, timeout_connect=2, ping_interval=20, standby_connection = False):
         """Initialize the client."""
         self.ip = ip
         self.port = 3000
@@ -39,7 +38,6 @@ class WebOsClient(object):
         self.web_socket = None
         self.command_count = 0
         self.timeout_connect = timeout_connect
-        self.timeout_request = timeout_request
         self.ping_interval = ping_interval
         self.standby_connection = standby_connection
         self.connect_task = None
@@ -455,12 +453,12 @@ class WebOsClient(object):
         self.futures[uid] = res
         try:
             await self.command(cmd_type, uri, payload, uid)
-        except PyLGTVCmdException("Couldn't execute command"):
+        except (asyncio.CancelledError, PyLGTVCmdException):
             del self.futures[uid]
             raise
         try:
-            response = await asyncio.wait_for(res, timeout = self.timeout_request)
-        except (asyncio.CancelledError, asyncio.TimeoutError):
+            response = await res
+        except asyncio.CancelledError:
             if uid in self.futures:
                 del self.futures[uid]
             raise
