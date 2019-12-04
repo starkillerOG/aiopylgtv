@@ -13,8 +13,8 @@ pip install aiopylgtv
 
 ## Install from Source
 ```
-python setup.py sdist
-pip install dist/aiopylgtv-0.2.0.tar.gz
+python setup.py sdist bdist_wheel
+pip install --upgrade dist/aiopylgtv-0.2.0-py3-none-any.whl
 ```
 
 ## Basic Example
