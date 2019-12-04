@@ -962,14 +962,34 @@ class WebOsClient(object):
     async def set_color(self, picMode, value=50):
         return await self.set_ui_data("COLOR_UI_DATA", picMode, value)
 
+    async def set_1d_2_2_en(self, picMode, value=0):
+        data = np.array(value, dtype=np.uint16)
+        return await self.calibration_request("1D_2_2_EN", picMode, data)
+
+    async def set_1d_0_45_en(self, picMode, value=0):
+        data = np.array(value, dtype=np.uint16)
+        return await self.calibration_request("1D_0_45_EN", picMode, data)
+
+    async def set_bt709_3by3_gamut_data(self, picMode, data=np.identity(3, dtype=np.float32)):
+        self.validateCalibrationData(data, (3,3), np.float32)
+        return await self.calibration_request("BT709_3BY3_GAMUT_DATA", picMode, data)
+
+    async def set_bt2020_3by3_gamut_data(self, picMode, data=np.identity(3, dtype=np.float32)):
+        self.validateCalibrationData(data, (3,3), np.float32)
+        return await self.calibration_request("BT709_3BY3_GAMUT_DATA", picMode, data)
+
     async def ddc_reset(self, picMode):
         await self.set_brightness(picMode)
         await self.set_contrast(picMode)
         await self.set_oled_light(picMode)
         await self.set_color(picMode)
-        await self.upload_1d_lut(picMode)
+        await self.set_1d_2_2_en(picMode)
+        await self.set_1d_0_45_en(picMode)
+        await self.set_bt709_3by3_gamut_data(picMode)
+        await self.set_bt2020_3by3_gamut_data(picMode)
         await self.upload_3d_lut_bt709(picMode)
         await self.upload_3d_lut_bt2020(picMode)
+        await self.upload_1d_lut(picMode)
 
     async def get_picture_settings(self, keys=["contrast","backlight","brightness","color"]):
         payload = {
