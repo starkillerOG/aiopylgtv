@@ -80,7 +80,7 @@ def read_cube_file(filename):
     domain_max = np.reshape(domain_max, (1,3))
     
     #shift and scale lut to range [0.,1.]
-    lut = (lut-domain_min)/domain_max
+    lut = (lut-domain_min)/(domain_max-domain_min)
     
     if lut_1d_size:
         if lut.shape != (lut_1d_size,3):
