@@ -886,7 +886,7 @@ class WebOsClient(object):
         if data.dtype != dtype:
             raise TypeError
 
-    async def calibration_request(self, command, picMode, data, nPadding=0):
+    async def calibration_request(self, command, picMode, data):
         dataenc = base64.b64encode(data.tobytes()).decode()
 
         payload = {
