@@ -976,7 +976,7 @@ class WebOsClient(object):
 
     async def set_bt2020_3by3_gamut_data(self, picMode, data=np.identity(3, dtype=np.float32)):
         self.validateCalibrationData(data, (3,3), np.float32)
-        return await self.calibration_request("BT709_3BY3_GAMUT_DATA", picMode, data)
+        return await self.calibration_request("BT2020_3BY3_GAMUT_DATA", picMode, data)
 
     async def ddc_reset(self, picMode):
         await self.set_brightness(picMode)
