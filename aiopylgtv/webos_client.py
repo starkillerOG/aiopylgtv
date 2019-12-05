@@ -978,6 +978,26 @@ class WebOsClient(object):
         self.validateCalibrationData(data, (3,3), np.float32)
         return await self.calibration_request("BT2020_3BY3_GAMUT_DATA", picMode, data)
 
+    async def set_tonemap_params(self, picMode,
+                                 luminance = 700,
+                                 mastering_peak_1 = 1000,
+                                 rolloff_point_1 = 70,
+                                 mastering_peak_2 = 4000,
+                                 rolloff_point_2 = 60,
+                                 mastering_peak_3 = 10000,
+                                 rolloff_point_3 = 50) :
+
+        data = np.array([luminance,
+                         mastering_peak_1,
+                         rolloff_point_1,
+                         mastering_peak_2,
+                         rolloff_point_2,
+                         mastering_peak_3,
+                         rolloff_point_3,
+                         ], dtype= np.uint16)
+
+        return await self.calibration_request("1D_TONEMAP_PARAM", picMode, data)
+
     async def ddc_reset(self, picMode):
         await self.set_brightness(picMode)
         await self.set_contrast(picMode)
