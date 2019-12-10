@@ -901,7 +901,7 @@ class WebOsClient:
         await self.button(f"""{num}""")
 
     def validateCalibrationData(self, data, shape, dtype):
-        if type(data) is not np.ndarray:
+        if not isinstance(data, np.ndarray):
             raise TypeError
         if data.shape != shape:
             raise ValueError
