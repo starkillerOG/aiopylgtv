@@ -99,7 +99,7 @@ def read_cube_file(filename):  # noqa: C901
     if lut_1d_size:
         if lut.shape != (lut_1d_size, 3):
             raise ValueError(
-                f"Expected shape {(lut_1d_size,3)} for 1D LUT, but got {lut.shape}."
+                f"Expected shape {(lut_1d_size, 3)} for 1D LUT, but got {lut.shape}."
             )
         # convert to integer with appropriate range
         lut = np.rint(lut * 32767.0).astype(np.uint16)
@@ -137,10 +137,7 @@ def read_cal_file(filename):
     # interpolate if necessary
     if lut_1d_size_in != lut_1d_size:
         x = np.linspace(0.0, 1.0, lut_1d_size, dtype=np.float64)
-        lutcomponents = []
-        for i in range(1, 4):
-            lutcomponent = np.interp(x, lut[:, 0], lut[:, i])
-            lutcomponents.append(lutcomponent)
+        lutcomponents = [np.interp(x, lut[:, 0], lut[:, i]) for i in range(1, 4)]
         lut = np.stack(lutcomponents, axis=-1)
     else:
         lut = lut[:, 1:]
