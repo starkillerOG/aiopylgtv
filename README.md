@@ -4,7 +4,7 @@ Library to control webOS based LG Tv devices.
 Based on pylgtv library at https://github.com/TheRealLink/pylgtv which is no longer maintained.
 
 ## Requirements
-- Python >= 3.8
+- Python >= 3.6
 
 ## Install
 ```bash
