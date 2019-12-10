@@ -7,12 +7,12 @@ Based on pylgtv library at https://github.com/TheRealLink/pylgtv which is no lon
 - Python >= 3.8
 
 ## Install
-```
+```bash
 pip install aiopylgtv
 ```
 
 ## Install from Source
-```
+```bash
 python setup.py sdist bdist_wheel
 pip install --upgrade dist/aiopylgtv-0.2.1-py3-none-any.whl
 ```
@@ -37,7 +37,7 @@ asyncio.get_event_loop().run_until_complete(runloop(client))
 
 ## Subscribed state updates
 A callback coroutine can be registered with the client in order to be notified of any state changes.
-```
+```python
 import asyncio
 from aiopylgtv import WebOsClient
 
@@ -116,8 +116,7 @@ Calibration commands can only be run while in calibration mode (controlled by "s
 While in calibration mode for HDR10 tone mapping is bypassed.
 There may be other not fully known/understood changes in the image processing pipeline while in calibration mode.
 
-
-```
+```python
 import asyncio
 from aiopylgtv import WebOsClient
 
