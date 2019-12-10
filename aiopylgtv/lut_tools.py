@@ -25,54 +25,57 @@ def read_cube_file(filename):  # noqa: C901
     lut_3d_size = None
     domain_min = None
     domain_max = None
-    with open(filename, "r") as f:
-        for line in f:
-            icomment = line.find("#")
-            if icomment >= 0:
-                line = line[:icomment]
 
-            splitline = line.split()
-            if splitline:
-                keyword = splitline[0]
-            else:
-                keyword = None
+    with open(filename) as f:
+        lines = f.readlines()
 
-            if keyword is None:
-                pass
-            elif keyword == "TITLE":
-                pass
-            elif keyword == "LUT_1D_SIZE":
-                lut_1d_size = int(splitline[1])
-                if lut_1d_size < 2 or lut_1d_size > 65536:
-                    raise ValueError(
-                        f"Invalid value {lut_1d_size} for LUT_1D_SIZE, must be in range [2,65536]."
-                    )
-            elif keyword == "LUT_3D_SIZE":
-                lut_3d_size = int(splitline[1])
-                if lut_3d_size < 2 or lut_3d_size > 256:
-                    raise ValueError(
-                        f"Invalid value {lut_3d_size} for LUT_3D_SIZE, must be in range [2,256]."
-                    )
-            elif keyword == "DOMAIN_MIN":
-                domain_min = np.genfromtxt([line], usecols=(1, 2, 3), dtype=np.float64)
-                if domain_min.shape != (3,):
-                    raise ValueError("DOMAIN_MIN must provide exactly 3 values.")
-                if np.amin(domain_min) < -1e37 or np.amax(domain_min) > 1e37:
-                    raise ValueError(
-                        "Invalid value in DOMAIN_MIN, must be in range [-1e37,1e37]."
-                    )
-            elif keyword == "DOMAIN_MAX":
-                domain_max = np.genfromtxt([line], usecols=(1, 2, 3), dtype=np.float64)
-                if domain_max.shape != (3,):
-                    raise ValueError("DOMAIN_MIN must provide exactly 3 values.")
-                if np.amin(domain_max) < -1e37 or np.amax(domain_max) > 1e37:
-                    raise ValueError(
-                        "Invalid value in DOMAIN_MAX, must be in range [-1e37,1e37]."
-                    )
-            else:
-                break
+    for line in lines:
+        icomment = line.find("#")
+        if icomment >= 0:
+            line = line[:icomment]
 
-            nheader += 1
+        splitline = line.split()
+        if splitline:
+            keyword = splitline[0]
+        else:
+            keyword = None
+
+        if keyword is None:
+            pass
+        elif keyword == "TITLE":
+            pass
+        elif keyword == "LUT_1D_SIZE":
+            lut_1d_size = int(splitline[1])
+            if lut_1d_size < 2 or lut_1d_size > 65536:
+                raise ValueError(
+                    f"Invalid value {lut_1d_size} for LUT_1D_SIZE, must be in range [2,65536]."
+                )
+        elif keyword == "LUT_3D_SIZE":
+            lut_3d_size = int(splitline[1])
+            if lut_3d_size < 2 or lut_3d_size > 256:
+                raise ValueError(
+                    f"Invalid value {lut_3d_size} for LUT_3D_SIZE, must be in range [2,256]."
+                )
+        elif keyword == "DOMAIN_MIN":
+            domain_min = np.genfromtxt([line], usecols=(1, 2, 3), dtype=np.float64)
+            if domain_min.shape != (3,):
+                raise ValueError("DOMAIN_MIN must provide exactly 3 values.")
+            if np.amin(domain_min) < -1e37 or np.amax(domain_min) > 1e37:
+                raise ValueError(
+                    "Invalid value in DOMAIN_MIN, must be in range [-1e37,1e37]."
+                )
+        elif keyword == "DOMAIN_MAX":
+            domain_max = np.genfromtxt([line], usecols=(1, 2, 3), dtype=np.float64)
+            if domain_max.shape != (3,):
+                raise ValueError("DOMAIN_MIN must provide exactly 3 values.")
+            if np.amin(domain_max) < -1e37 or np.amax(domain_max) > 1e37:
+                raise ValueError(
+                    "Invalid value in DOMAIN_MAX, must be in range [-1e37,1e37]."
+                )
+        else:
+            break
+
+        nheader += 1
 
     if lut_1d_size and lut_3d_size:
         raise ValueError("Cannot specify both LUT_1D_SIZE and LUT_3D_SIZE.")
