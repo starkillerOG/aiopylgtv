@@ -14,6 +14,6 @@ setup(
     keywords=["webos", "tv"],
     classifiers=[],
     entry_points={
-        "console_scripts": ["aiopylgtvcommand=aiopylgtv.utils:aiopylgtvcommand",],
+        "console_scripts": ["aiopylgtvcommand=aiopylgtv.utils:aiopylgtvcommand"],
     },
 )

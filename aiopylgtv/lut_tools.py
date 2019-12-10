@@ -19,7 +19,7 @@ def unity_lut_3d(n=33):
     return lut
 
 
-def read_cube_file(filename):
+def read_cube_file(filename):  # noqa: C901
     nheader = 0
     lut_1d_size = None
     lut_3d_size = None
@@ -117,7 +117,6 @@ def read_cube_file(filename):
 
 
 def read_cal_file(filename):
-    nheader = 0
     with open(filename, "r") as f:
         caldata = f.readlines()
 

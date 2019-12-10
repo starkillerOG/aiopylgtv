@@ -1,11 +1,9 @@
 import asyncio
 import base64
-import codecs
 import copy
 import json
 import logging
 import os
-import sys
 
 import numpy as np
 import websockets
@@ -59,7 +57,7 @@ class WebOsClient:
         self.callbacks = {}
         self.futures = {}
         self._current_appId = ""
-        self._muted = muted = False
+        self._muted = False
         self._volume = 0
         self._current_channel = None
         self._apps = {}
@@ -269,7 +267,7 @@ class WebOsClient:
             self.input_connection = None
 
             self._current_appId = ""
-            self._muted = muted = False
+            self._muted = False
             self._volume = 0
             self._current_channel = None
             self._apps = {}
@@ -530,7 +528,7 @@ class WebOsClient:
             return await self.request(
                 uri, payload=payload, cmd_type="subscribe", uid=uid
             )
-        except:
+        except Exception:
             del self.callbacks[uid]
             raise
 
