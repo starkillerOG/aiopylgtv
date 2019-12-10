@@ -28,10 +28,10 @@ async def runloop(client):
     apps = await client.get_apps()
     for app in apps:
         print(app)
-    
+
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')            
+client = WebOsClient('192.168.1.53')  
 asyncio.get_event_loop().run_until_complete(runloop(client))
 ```
 
@@ -51,20 +51,20 @@ async def on_state_change():
     print(client.inputs)
     print(client.system_info)
     print(client.software_info)
-    
+
 
 async def runloop():
     await client.register_state_update_callback(on_state_change)
-    
+
     await client.connect()
-    
+
     print(client.inputs)
     ret = await client.set_input("HDMI_3")
     print(ret)
-    
+
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')            
+client = WebOsClient('192.168.1.53')  
 asyncio.get_event_loop().run_until_complete(runloop())
 ```
 
@@ -123,7 +123,7 @@ from aiopylgtv import WebOsClient
 
 async def runloop():
     await client.connect()
-    
+
     await client.set_input("HDMI_2")
     await client.start_calibration(picMode = "expert1")
     await client.ddc_reset(picMode = "expert1")
@@ -133,9 +133,9 @@ async def runloop():
     await client.upload_3d_lut_bt709_from_file(picMode = "expert1", filename = "test3d.cube")
     await client.upload_3d_lut_bt2020_from_file(picMode = "expert1", filename = "test3d.cube")
     await client.end_calibration(picMode = "expert1")
-    
+
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')            
+client = WebOsClient('192.168.1.53')  
 asyncio.get_event_loop().run_until_complete(runloop())
 ```
