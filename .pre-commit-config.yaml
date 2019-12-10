@@ -12,7 +12,11 @@ repos:
     rev: 3.7.8
     hooks:
     -   id: flake8
-        args: ['--max-line-length=500', '--ignore=E203,E266,E501,W503', '--max-complexity=18', '--select=B,C,E,F,W,T4,B9']
+        args:
+          - --max-line-length=500
+          - --ignore=E203,E266,E501,W503
+          - --max-complexity=18
+          - --select=B,C,E,F,W,T4,B9
 -   repo: https://github.com/ambv/black
     rev: 19.3b0
     hooks:
@@ -27,4 +31,9 @@ repos:
     rev: v4.3.21
     hooks:
     -   id: isort
-        args: ['--multi-line=3', '--trailing-comma', '--force-grid-wrap=0', '--use-parentheses', '--line-width=88']
+        args:
+          - --multi-line=3
+          - --trailing-comma
+          - --force-grid-wrap=0
+          - --use-parentheses
+          - --line-width=88
