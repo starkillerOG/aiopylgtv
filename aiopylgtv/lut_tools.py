@@ -84,17 +84,14 @@ def read_cube_file(filename):  # noqa: C901
         raise ValueError("Must specify one of LUT_1D_SIZE or LUT_3D_SIZE.")
 
     if domain_min is None:
-        domain_min = np.zeros((3,), dtype=np.float64)
+        domain_min = np.zeros((1, 3), dtype=np.float64)
 
     if domain_max is None:
-        domain_max = np.ones((3,), dtype=np.float64)
+        domain_max = np.ones((1, 3), dtype=np.float64)
 
     lut = np.genfromtxt(filename, skip_header=nheader, comments="#", dtype=np.float64)
     if np.amin(lut) < -1e37 or np.amax(lut) > 1e37:
         raise ValueError("Invalid value in DOMAIN_MAX, must be in range [-1e37,1e37].")
-
-    domain_min = np.reshape(domain_min, (1, 3))
-    domain_max = np.reshape(domain_max, (1, 3))
 
     # shift and scale lut to range [0.,1.]
     lut = (lut - domain_min) / (domain_max - domain_min)
