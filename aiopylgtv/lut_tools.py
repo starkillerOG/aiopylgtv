@@ -39,6 +39,16 @@ def read_cube_file(filename):  # noqa: C901
             )
         return domain_limit
 
+    def lut_size(splitline, dim):
+        lut_size = int(splitline[1])
+        upper_limit = {1: 65536, 3: 256}[dim]
+        if lut_size < 2 or lut_size > upper_limit:
+            raise ValueError(
+                f"Invalid value {lut_size} for LUT_{dim}D_SIZE,"
+                f" must be in range [2, {upper_limit}]."
+            )
+        return lut_size
+
     for line in lines:
         icomment = line.find("#")
         if icomment >= 0:
@@ -55,17 +65,9 @@ def read_cube_file(filename):  # noqa: C901
         elif keyword == "TITLE":
             pass
         elif keyword == "LUT_1D_SIZE":
-            lut_1d_size = int(splitline[1])
-            if lut_1d_size < 2 or lut_1d_size > 65536:
-                raise ValueError(
-                    f"Invalid value {lut_1d_size} for LUT_1D_SIZE, must be in range [2,65536]."
-                )
+            lut_1d_size = lut_size(splitline, dim=1)
         elif keyword == "LUT_3D_SIZE":
-            lut_3d_size = int(splitline[1])
-            if lut_3d_size < 2 or lut_3d_size > 256:
-                raise ValueError(
-                    f"Invalid value {lut_3d_size} for LUT_3D_SIZE, must be in range [2,256]."
-                )
+            lut_3d_size = lut_size(splitline, dim=3)
         elif keyword == "DOMAIN_MIN":
             domain_min = domain_check(line, "MIN")
         elif keyword == "DOMAIN_MAX":
