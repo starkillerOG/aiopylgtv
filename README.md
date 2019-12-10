@@ -31,7 +31,7 @@ async def runloop(client):
 
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')  
+client = WebOsClient('192.168.1.53')
 asyncio.get_event_loop().run_until_complete(runloop(client))
 ```
 
@@ -64,7 +64,7 @@ async def runloop():
 
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')  
+client = WebOsClient('192.168.1.53')
 asyncio.get_event_loop().run_until_complete(runloop())
 ```
 
@@ -74,16 +74,16 @@ All of the currently implemented functions SHOULD be safe, but no guarantees.
 
 On supported models, calibration functionality and upload to internal LUTs is supported.  The supported input formats for LUTs are IRIDAS .cube format for both 1D and 3D LUTs, and ArgyllCMS .cal files for 1D LUTs.
 
-Not yet supported:  
--Dolby Vision config upload  
+Not yet supported:
+-Dolby Vision config upload
 -Custom tone mapping for 2019 models (functionality does not exist on 2018 models)
 
-Supported models:  
-LG 2019 Alpha 9 G2 OLED R9 Z9 W9 W9S E9 C9 NanoCell SM99  
-LG 2019 Alpha 7 G2 NanoCell (8000 & higher model numbers)  
-LG 2018 Alpha 7 Super UHD LED (8000 & higher model numbers)  
-LG 2018 Alpha 7 OLED B8  
-LG 2018 Alpha 9 OLED C8 E8 G8 W8  
+Supported models:
+LG 2019 Alpha 9 G2 OLED R9 Z9 W9 W9S E9 C9 NanoCell SM99
+LG 2019 Alpha 7 G2 NanoCell (8000 & higher model numbers)
+LG 2018 Alpha 7 Super UHD LED (8000 & higher model numbers)
+LG 2018 Alpha 7 OLED B8
+LG 2018 Alpha 9 OLED C8 E8 G8 W8
 
 Models with Alpha 9 use 33 point 3D LUTs, while those with Alpha 7 use 17 points.
 
@@ -136,6 +136,6 @@ async def runloop():
 
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')  
+client = WebOsClient('192.168.1.53')
 asyncio.get_event_loop().run_until_complete(runloop())
 ```
