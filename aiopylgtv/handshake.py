@@ -1,11 +1,13 @@
-SIGNATURE = ("eyJhbGdvcml0aG0iOiJSU0EtU0hBMjU2Iiwia2V5SWQiOiJ0ZXN0LXNpZ25pbm" +
-             "ctY2VydCIsInNpZ25hdHVyZVZlcnNpb24iOjF9.hrVRgjCwXVvE2OOSpDZ58hR" +
-             "+59aFNwYDyjQgKk3auukd7pcegmE2CzPCa0bJ0ZsRAcKkCTJrWo5iDzNhMBWRy" +
-             "aMOv5zWSrthlf7G128qvIlpMT0YNY+n/FaOHE73uLrS/g7swl3/qH/BGFG2Hu4" +
-             "RlL48eb3lLKqTt2xKHdCs6Cd4RMfJPYnzgvI4BNrFUKsjkcu+WD4OO2A27Pq1n" +
-             "50cMchmcaXadJhGrOqH5YmHdOCj5NSHzJYrsW0HPlpuAx/ECMeIZYDh6RMqaFM" +
-             "2DXzdKX9NmmyqzJ3o/0lkk/N97gfVRLW5hA29yeAwaCViZNCP8iC9aO0q9fQoj" +
-             "oa7NQnAtw==")
+SIGNATURE = (
+    "eyJhbGdvcml0aG0iOiJSU0EtU0hBMjU2Iiwia2V5SWQiOiJ0ZXN0LXNpZ25pbm"
+    + "ctY2VydCIsInNpZ25hdHVyZVZlcnNpb24iOjF9.hrVRgjCwXVvE2OOSpDZ58hR"
+    + "+59aFNwYDyjQgKk3auukd7pcegmE2CzPCa0bJ0ZsRAcKkCTJrWo5iDzNhMBWRy"
+    + "aMOv5zWSrthlf7G128qvIlpMT0YNY+n/FaOHE73uLrS/g7swl3/qH/BGFG2Hu4"
+    + "RlL48eb3lLKqTt2xKHdCs6Cd4RMfJPYnzgvI4BNrFUKsjkcu+WD4OO2A27Pq1n"
+    + "50cMchmcaXadJhGrOqH5YmHdOCj5NSHzJYrsW0HPlpuAx/ECMeIZYDh6RMqaFM"
+    + "2DXzdKX9NmmyqzJ3o/0lkk/N97gfVRLW5hA29yeAwaCViZNCP8iC9aO0q9fQoj"
+    + "oa7NQnAtw=="
+)
 
 REGISTRATION_PAYLOAD = {
     "forcePairing": False,
@@ -36,27 +38,20 @@ REGISTRATION_PAYLOAD = {
             "READ_POWER_STATE",
             "READ_COUNTRY_INFO",
             "CONTROL_INPUT_TEXT",
-            "CONTROL_MOUSE_AND_KEYBOARD", 
+            "CONTROL_MOUSE_AND_KEYBOARD",
             "READ_INSTALLED_APPS",
             "READ_SETTINGS",
         ],
-        "signatures": [
-            {
-                "signature": SIGNATURE,
-                "signatureVersion": 1
-            }
-        ],
+        "signatures": [{"signature": SIGNATURE, "signatureVersion": 1}],
         "signed": {
             "appId": "com.lge.test",
             "created": "20140509",
             "localizedAppNames": {
                 "": "LG Remote App",
-                "ko-KR": u"리모컨 앱",
-                "zxx-XX": u"ЛГ Rэмotэ AПП"
+                "ko-KR": "리모컨 앱",
+                "zxx-XX": "ЛГ Rэмotэ AПП",
             },
-            "localizedVendorNames": {
-                "": "LG Electronics"
-            },
+            "localizedVendorNames": {"": "LG Electronics"},
             "permissions": [
                 "TEST_SECURE",
                 "CONTROL_INPUT_TEXT",
@@ -73,18 +68,18 @@ REGISTRATION_PAYLOAD = {
                 "READ_UPDATE_INFO",
                 "UPDATE_FROM_REMOTE_APP",
                 "READ_LGE_TV_INPUT_EVENTS",
-                "READ_TV_CURRENT_TIME"
+                "READ_TV_CURRENT_TIME",
             ],
             "serial": "2f930e2d2cfe083771f68e4fe7bb07",
-            "vendorId": "com.lge"
-        }
+            "vendorId": "com.lge",
+        },
     },
-    "pairingType": "PROMPT"
+    "pairingType": "PROMPT",
 }
 
-            
+
 REGISTRATION_MESSAGE = {
-    'type': "register",
-    'id': "register_0",
-    'payload': REGISTRATION_PAYLOAD,
+    "type": "register",
+    "id": "register_0",
+    "payload": REGISTRATION_PAYLOAD,
 }
