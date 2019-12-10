@@ -16,7 +16,6 @@ setup(
     author="Josh Bendavid",
     author_email="joshbendavid@gmail.com",
     url="https://github.com/bendavid/aiopylgtv",
-    download_url="https://github.com/bendavid/aiopylgtv/archive/0.2.5.tar.gz",
     keywords=["webos", "tv"],
     classifiers=[],
     entry_points={
