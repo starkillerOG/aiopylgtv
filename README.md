@@ -139,3 +139,11 @@ async def runloop():
 client = WebOsClient('192.168.1.53')
 asyncio.get_event_loop().run_until_complete(runloop())
 ```
+
+## Development of `aiopylgtv`
+
+We use [`pre-commit`](https://pre-commit.com) to keep a consistent code style, so ``pip install pre_commit`` and run
+```bash
+pre-commit install
+```
+to install the hooks.
