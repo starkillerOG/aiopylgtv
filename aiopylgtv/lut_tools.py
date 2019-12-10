@@ -29,6 +29,16 @@ def read_cube_file(filename):  # noqa: C901
     with open(filename) as f:
         lines = f.readlines()
 
+    def domain_check(line, which):
+        domain_limit = np.genfromtxt([line], usecols=(1, 2, 3), dtype=np.float64)
+        if domain_limit.shape != (3,):
+            raise ValueError(f"DOMAIN_{which} must provide exactly 3 values.")
+        if np.amin(domain_limit) < -1e37 or np.amax(domain_limit) > 1e37:
+            raise ValueError(
+                f"Invalid value in DOMAIN_{which}, must be in range [-1e37,1e37]."
+            )
+        return domain_limit
+
     for line in lines:
         icomment = line.find("#")
         if icomment >= 0:
@@ -57,21 +67,9 @@ def read_cube_file(filename):  # noqa: C901
                     f"Invalid value {lut_3d_size} for LUT_3D_SIZE, must be in range [2,256]."
                 )
         elif keyword == "DOMAIN_MIN":
-            domain_min = np.genfromtxt([line], usecols=(1, 2, 3), dtype=np.float64)
-            if domain_min.shape != (3,):
-                raise ValueError("DOMAIN_MIN must provide exactly 3 values.")
-            if np.amin(domain_min) < -1e37 or np.amax(domain_min) > 1e37:
-                raise ValueError(
-                    "Invalid value in DOMAIN_MIN, must be in range [-1e37,1e37]."
-                )
+            domain_min = domain_check(line, "MIN")
         elif keyword == "DOMAIN_MAX":
-            domain_max = np.genfromtxt([line], usecols=(1, 2, 3), dtype=np.float64)
-            if domain_max.shape != (3,):
-                raise ValueError("DOMAIN_MIN must provide exactly 3 values.")
-            if np.amin(domain_max) < -1e37 or np.amax(domain_max) > 1e37:
-                raise ValueError(
-                    "Invalid value in DOMAIN_MAX, must be in range [-1e37,1e37]."
-                )
+            domain_max = domain_check(line, "MAX")
         else:
             break
 
