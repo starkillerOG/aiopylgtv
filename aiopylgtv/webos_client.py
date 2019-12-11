@@ -950,16 +950,16 @@ class WebOsClient(object):
         data = np.array(value, dtype=np.uint16)
         return await self.calibration_request(command, picMode, data)
     
-    async def set_brightness(self, picMode, value=50):
+    async def set_brightness(self, picMode, value):
         return await self.set_ui_data("BRIGHTNESS_UI_DATA", picMode, value)
 
-    async def set_contrast(self, picMode, value=85):
+    async def set_contrast(self, picMode, value):
         return await self.set_ui_data("CONTRAST_UI_DATA", picMode, value)
 
-    async def set_oled_light(self, picMode, value=80):
+    async def set_oled_light(self, picMode, value):
         return await self.set_ui_data("BACKLIGHT_UI_DATA", picMode, value)
 
-    async def set_color(self, picMode, value=50):
+    async def set_color(self, picMode, value):
         return await self.set_ui_data("COLOR_UI_DATA", picMode, value)
 
     async def set_1d_2_2_en(self, picMode, value=0):
@@ -999,10 +999,6 @@ class WebOsClient(object):
         return await self.calibration_request("1D_TONEMAP_PARAM", picMode, data)
 
     async def ddc_reset(self, picMode):
-        await self.set_brightness(picMode)
-        await self.set_contrast(picMode)
-        await self.set_oled_light(picMode)
-        await self.set_color(picMode)
         await self.set_1d_2_2_en(picMode)
         await self.set_1d_0_45_en(picMode)
         await self.set_bt709_3by3_gamut_data(picMode)
