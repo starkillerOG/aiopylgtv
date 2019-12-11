@@ -998,14 +998,26 @@ class WebOsClient(object):
 
         return await self.calibration_request("1D_TONEMAP_PARAM", picMode, data)
 
-    async def ddc_reset(self, picMode):
+    async def ddc_reset(self, picMode, reset_1d_lut = True):
+        if isinstance(reset_1d_lut, str):
+            if reset_1d_lut.lower() == "true":
+                reset_1d_lut = True
+            elif reset_1d_lut.lower() == "false":
+                reset_1d_lut = False
+            else:
+                try:
+                    reset_1d_lut = bool(int(reset_1d_lut))
+                except ValueError:
+                    raise ValueError(f"Invalid parameter {reset_1d_lut} for ddc_reset, should be a boolean.")
+
         await self.set_1d_2_2_en(picMode)
         await self.set_1d_0_45_en(picMode)
         await self.set_bt709_3by3_gamut_data(picMode)
         await self.set_bt2020_3by3_gamut_data(picMode)
         await self.upload_3d_lut_bt709(picMode)
         await self.upload_3d_lut_bt2020(picMode)
-        await self.upload_1d_lut(picMode)
+        if reset_1d_lut:
+            await self.upload_1d_lut(picMode)
 
     async def get_picture_settings(self, keys=["contrast","backlight","brightness","color"]):
         payload = {
