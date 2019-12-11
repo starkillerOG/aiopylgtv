@@ -7,8 +7,10 @@ def unity_lut_1d():
 
 def unity_lut_3d(n=33):
     spacing = complex(0,n)
-    lut = np.mgrid[0.:4095.:spacing,0.:4095.:spacing,0.:4095.:spacing]
+    endpoint  = 4096.
+    lut = np.mgrid[0.:endpoint:spacing,0.:endpoint:spacing,0.:endpoint:spacing]
     lut = np.rint(lut).astype(np.uint16)
+    lut = np.clip(lut,0,4095)
     lut = np.transpose(lut, axes=(1,2,3,0))
     lut = np.flip(lut, axis=-1)
     return lut
