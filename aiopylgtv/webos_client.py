@@ -1019,6 +1019,8 @@ class WebOsClient(object):
         if reset_1d_lut:
             await self.upload_1d_lut(picMode)
 
+        return True
+
     async def get_picture_settings(self, keys=["contrast","backlight","brightness","color"]):
         payload = {
                 "category" : "picture",
