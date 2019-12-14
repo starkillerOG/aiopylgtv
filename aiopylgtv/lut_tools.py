@@ -1,8 +1,9 @@
 import numpy as np
 
 def unity_lut_1d():
-    lutmono = np.arange(0, 32768, 32, dtype=np.uint16)
+    lutmono = np.linspace(0., 32767., 1024, dtype=np.float64)
     lut = np.stack([lutmono]*3, axis=0)
+    lut = np.rint(lut).astype(np.uint16)
     return lut
 
 def unity_lut_3d(n=33):
@@ -95,7 +96,8 @@ def read_cube_file(filename):
         if lut.shape != (lut_3d_size**3, 3):
             raise ValueError(f"Expected shape {(lut_3d_size**3, 3)} for 3D LUT, but got {lut.shape}.")
         lut = np.reshape(lut, (lut_3d_size, lut_3d_size, lut_3d_size, 3))
-        lut = np.rint(lut*4095.).astype(np.uint16)
+        lut = np.rint(lut*4096.).astype(np.uint16)
+        lut = np.clip(lut,0,4095)
         
     return lut
 
