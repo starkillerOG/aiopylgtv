@@ -20,8 +20,7 @@ KEY_FILE_NAME = '.aiopylgtv'
 USER_HOME = 'HOME'
 
 class PyLGTVPairException(Exception):
-    def __init__(self, id, message):
-        self.id = id
+    def __init__(self, message):
         self.message = message
         
 class PyLGTVCmdException(Exception):
