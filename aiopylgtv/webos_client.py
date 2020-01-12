@@ -222,7 +222,7 @@ class WebOsClient:
 
             self.doStateUpdate = False
             self._system_info, self._software_info = await asyncio.gather(
-                self.get_system_info(), self.get_software_info(),
+                self.get_system_info(), self.get_software_info()
             )
             await asyncio.gather(
                 self.subscribe_current_app(self.set_current_app_state),
@@ -1002,31 +1002,40 @@ class WebOsClient:
         self.validateCalibrationData(data, (3, 3), np.float32)
         return await self.calibration_request("BT709_3BY3_GAMUT_DATA", picMode, data)
 
-    async def set_bt2020_3by3_gamut_data(self, picMode, data=np.identity(3, dtype=np.float32)):
-        self.validateCalibrationData(data, (3,3), np.float32)
+    async def set_bt2020_3by3_gamut_data(
+        self, picMode, data=np.identity(3, dtype=np.float32)
+    ):
+        self.validateCalibrationData(data, (3, 3), np.float32)
         return await self.calibration_request("BT2020_3BY3_GAMUT_DATA", picMode, data)
 
-    async def set_tonemap_params(self, picMode,
-                                 luminance = 700,
-                                 mastering_peak_1 = 1000,
-                                 rolloff_point_1 = 70,
-                                 mastering_peak_2 = 4000,
-                                 rolloff_point_2 = 60,
-                                 mastering_peak_3 = 10000,
-                                 rolloff_point_3 = 50) :
+    async def set_tonemap_params(
+        self,
+        picMode,
+        luminance=700,
+        mastering_peak_1=1000,
+        rolloff_point_1=70,
+        mastering_peak_2=4000,
+        rolloff_point_2=60,
+        mastering_peak_3=10000,
+        rolloff_point_3=50,
+    ):
 
-        data = np.array([luminance,
-                         mastering_peak_1,
-                         rolloff_point_1,
-                         mastering_peak_2,
-                         rolloff_point_2,
-                         mastering_peak_3,
-                         rolloff_point_3,
-                         ], dtype= np.uint16)
+        data = np.array(
+            [
+                luminance,
+                mastering_peak_1,
+                rolloff_point_1,
+                mastering_peak_2,
+                rolloff_point_2,
+                mastering_peak_3,
+                rolloff_point_3,
+            ],
+            dtype=np.uint16,
+        )
 
         return await self.calibration_request("1D_TONEMAP_PARAM", picMode, data)
 
-    async def ddc_reset(self, picMode, reset_1d_lut = True):
+    async def ddc_reset(self, picMode, reset_1d_lut=True):
         if isinstance(reset_1d_lut, str):
             if reset_1d_lut.lower() == "true":
                 reset_1d_lut = True
@@ -1036,7 +1045,9 @@ class WebOsClient:
                 try:
                     reset_1d_lut = bool(int(reset_1d_lut))
                 except ValueError:
-                    raise ValueError(f"Invalid parameter {reset_1d_lut} for ddc_reset, should be a boolean.")
+                    raise ValueError(
+                        f"Invalid parameter {reset_1d_lut} for ddc_reset, should be a boolean."
+                    )
 
         await self.set_1d_2_2_en(picMode)
         await self.set_1d_0_45_en(picMode)
@@ -1052,10 +1063,7 @@ class WebOsClient:
     async def get_picture_settings(
         self, keys=["contrast", "backlight", "brightness", "color"]
     ):
-        payload = {
-            "category": "picture",
-            "keys": keys,
-        }
+        payload = {"category": "picture", "keys": keys}
         ret = await self.request(ep.GET_SYSTEM_SETTINGS, payload=payload)
         return ret["settings"]
 
