@@ -4,8 +4,6 @@ strategy:
   matrix:
     ## We can enable different Python versions when
     ## there are unit tests.
-    # Python36:
-    #   python.version: '3.6'
     # Python38:
     #   python.version: '3.8'
     Python37:

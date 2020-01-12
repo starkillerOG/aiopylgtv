@@ -7,7 +7,7 @@ setup(
     name="aiopylgtv",
     packages=["aiopylgtv"],
     install_requires=["websockets", "numpy"],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     zip_safe=True,
     version="0.2.5",
     description="Library to control webOS based LG TV devices.",
