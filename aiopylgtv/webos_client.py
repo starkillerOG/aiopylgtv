@@ -504,12 +504,7 @@ class WebOsClient:
         if payload is None:
             raise PyLGTVCmdException(f"Invalid request response {response}")
 
-        if cmd_type == "request":
-            returnValue = payload.get("returnValue")
-        elif cmd_type == "subscribe":
-            returnValue = payload.get("subscribed")
-        else:
-            returnValue = None
+        returnValue = payload.get("returnValue") or payload.get("subscribed")
 
         if returnValue is None:
             raise PyLGTVCmdException(f"Invalid request response {response}")
