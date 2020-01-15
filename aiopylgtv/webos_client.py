@@ -111,16 +111,24 @@ class WebOsClient:
 
         logger.debug("save keyfile to %s", key_file_path)
 
-        with open(key_file_path, "w+") as f:
-            raw_data = f.read()
-            key_dict = {}
+        if os.path.isfile(key_file_path):
+            with open(key_file_path, "r+") as f:
+                raw_data = f.read()
+                f.seek(0)
+                f.truncate()
+                key_dict = {}
 
-            if raw_data:
-                key_dict = json.loads(raw_data)
+                if raw_data:
+                    key_dict = json.loads(raw_data)
 
-            key_dict[self.ip] = self.client_key
+                key_dict[self.ip] = self.client_key
 
-            f.write(json.dumps(key_dict))
+                f.write(json.dumps(key_dict))
+        else:
+            with open(key_file_path, "w") as f:
+                key_dict = {}
+                key_dict[self.ip] = self.client_key
+                f.write(json.dumps(key_dict))
 
     async def connect(self):
         if not self.is_connected():
