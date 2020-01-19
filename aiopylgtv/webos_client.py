@@ -197,9 +197,9 @@ class WebOsClient:
             self.connection = ws
 
             # open additional connection needed to send button commands
-            # the url is dynamically generated and returned from the ep.INPUT_SOCKET
+            # the url is dynamically generated and returned from the ep.EP_INPUT_SOCKET
             # endpoint on the main connection
-            sockres = await self.request(ep.INPUT_SOCKET)
+            sockres = await self.request(ep.EP_INPUT_SOCKET)
             inputsockpath = sockres.get("socketPath")
             inputws = await asyncio.wait_for(
                 websockets.connect(
@@ -575,7 +575,7 @@ class WebOsClient:
                 icon_encoded_string = base64.b64encode(icon_file.read()).decode("ascii")
 
         return await self.request(
-            ep.SHOW_MESSAGE,
+            ep.EP_SHOW_MESSAGE,
             {
                 "message": message,
                 "iconData": icon_encoded_string,
@@ -586,7 +586,7 @@ class WebOsClient:
     # Apps
     async def get_apps(self):
         """Return all apps."""
-        res = await self.request(ep.GET_APPS)
+        res = await self.request(ep.EP_GET_APPS)
         return res.get("launchPoints")
 
     async def subscribe_apps(self, callback):
@@ -595,11 +595,11 @@ class WebOsClient:
         async def apps(payload):
             await callback(payload.get("launchPoints"))
 
-        return await self.subscribe(apps, ep.GET_APPS)
+        return await self.subscribe(apps, ep.EP_GET_APPS)
 
     async def get_current_app(self):
         """Get the current app id."""
-        res = await self.request(ep.GET_CURRENT_APP_INFO)
+        res = await self.request(ep.EP_GET_CURRENT_APP_INFO)
         return res.get("appId")
 
     async def subscribe_current_app(self, callback):
@@ -608,37 +608,37 @@ class WebOsClient:
         async def current_app(payload):
             await callback(payload.get("appId"))
 
-        return await self.subscribe(current_app, ep.GET_CURRENT_APP_INFO)
+        return await self.subscribe(current_app, ep.EP_GET_CURRENT_APP_INFO)
 
     async def launch_app(self, app):
         """Launch an app."""
-        return await self.request(ep.LAUNCH, {"id": app})
+        return await self.request(ep.EP_LAUNCH, {"id": app})
 
     async def launch_app_with_params(self, app, params):
         """Launch an app with parameters."""
-        return await self.request(ep.LAUNCH, {"id": app, "params": params})
+        return await self.request(ep.EP_LAUNCH, {"id": app, "params": params})
 
     async def launch_app_with_content_id(self, app, contentId):
         """Launch an app with contentId."""
-        return await self.request(ep.LAUNCH, {"id": app, "contentId": contentId})
+        return await self.request(ep.EP_LAUNCH, {"id": app, "contentId": contentId})
 
     async def close_app(self, app):
         """Close the current app."""
-        return await self.request(ep.LAUNCHER_CLOSE, {"id": app})
+        return await self.request(ep.EP_LAUNCHER_CLOSE, {"id": app})
 
     # Services
     async def get_services(self):
         """Get all services."""
-        res = await self.request(ep.GET_SERVICES)
+        res = await self.request(ep.EP_GET_SERVICES)
         return res.get("services")
 
     async def get_software_info(self):
         """Return the current software status."""
-        return await self.request(ep.GET_SOFTWARE_INFO)
+        return await self.request(ep.EP_GET_SOFTWARE_INFO)
 
     async def get_system_info(self):
         """Return the system information."""
-        return await self.request(ep.GET_SYSTEM_INFO)
+        return await self.request(ep.EP_GET_SYSTEM_INFO)
 
     async def power_off(self, disconnect=None):
         """Power off TV."""
@@ -649,30 +649,30 @@ class WebOsClient:
             # if tv is shutting down and standby++ option is not enabled,
             # response is unreliable, so don't wait for one,
             # and force immediate disconnect
-            await self.command("request", ep.POWER_OFF)
+            await self.command("request", ep.EP_POWER_OFF)
             await self.disconnect()
         else:
             # if standby++ option is enabled, connection stays open
             # and TV responds gracefully to power off request
-            return await self.request(ep.POWER_OFF)
+            return await self.request(ep.EP_POWER_OFF)
 
     async def power_on(self):
         """Play media."""
-        return await self.request(ep.POWER_ON)
+        return await self.request(ep.EP_POWER_ON)
 
     # 3D Mode
     async def turn_3d_on(self):
         """Turn 3D on."""
-        return await self.request(ep.SET_3D_ON)
+        return await self.request(ep.EP_SET_3D_ON)
 
     async def turn_3d_off(self):
         """Turn 3D off."""
-        return await self.request(ep.SET_3D_OFF)
+        return await self.request(ep.EP_SET_3D_OFF)
 
     # Inputs
     async def get_inputs(self):
         """Get all inputs."""
-        res = await self.request(ep.GET_INPUTS)
+        res = await self.request(ep.EP_GET_INPUTS)
         return res.get("devices")
 
     async def subscribe_inputs(self, callback):
@@ -681,7 +681,7 @@ class WebOsClient:
         async def inputs(payload):
             await callback(payload.get("devices"))
 
-        return await self.subscribe(inputs, ep.GET_INPUTS)
+        return await self.subscribe(inputs, ep.EP_GET_INPUTS)
 
     async def get_input(self):
         """Get current input."""
@@ -689,12 +689,12 @@ class WebOsClient:
 
     async def set_input(self, input):
         """Set the current input."""
-        return await self.request(ep.SET_INPUT, {"inputId": input})
+        return await self.request(ep.EP_SET_INPUT, {"inputId": input})
 
     # Audio
     async def get_audio_status(self):
         """Get the current audio status"""
-        return await self.request(ep.GET_AUDIO_STATUS)
+        return await self.request(ep.EP_GET_AUDIO_STATUS)
 
     async def get_muted(self):
         """Get mute status."""
@@ -707,15 +707,15 @@ class WebOsClient:
         async def muted(payload):
             await callback(payload.get("mute"))
 
-        return await self.subscribe(muted, ep.GET_AUDIO_STATUS)
+        return await self.subscribe(muted, ep.EP_GET_AUDIO_STATUS)
 
     async def set_mute(self, mute):
         """Set mute."""
-        return await self.request(ep.SET_MUTE, {"mute": mute})
+        return await self.request(ep.EP_SET_MUTE, {"mute": mute})
 
     async def get_volume(self):
         """Get the current volume."""
-        res = await self.request(ep.GET_VOLUME)
+        res = await self.request(ep.EP_GET_VOLUME)
         return res.get("volume")
 
     async def subscribe_volume(self, callback):
@@ -724,93 +724,93 @@ class WebOsClient:
         async def volume(payload):
             await callback(payload.get("volume"))
 
-        return await self.subscribe(volume, ep.GET_VOLUME)
+        return await self.subscribe(volume, ep.EP_GET_VOLUME)
 
     async def set_volume(self, volume):
         """Set volume."""
         volume = max(0, volume)
-        return await self.request(ep.SET_VOLUME, {"volume": volume})
+        return await self.request(ep.EP_SET_VOLUME, {"volume": volume})
 
     async def volume_up(self):
         """Volume up."""
-        return await self.request(ep.VOLUME_UP)
+        return await self.request(ep.EP_VOLUME_UP)
 
     async def volume_down(self):
         """Volume down."""
-        return await self.request(ep.VOLUME_DOWN)
+        return await self.request(ep.EP_VOLUME_DOWN)
 
     # TV Channel
     async def channel_up(self):
         """Channel up."""
-        return await self.request(ep.TV_CHANNEL_UP)
+        return await self.request(ep.EP_TV_CHANNEL_UP)
 
     async def channel_down(self):
         """Channel down."""
-        return await self.request(ep.TV_CHANNEL_DOWN)
+        return await self.request(ep.EP_TV_CHANNEL_DOWN)
 
     async def get_channels(self):
         """Get all tv channels."""
-        res = await self.request(ep.GET_TV_CHANNELS)
+        res = await self.request(ep.EP_GET_TV_CHANNELS)
         return res.get("channelList")
 
     async def get_current_channel(self):
         """Get the current tv channel."""
-        return await self.request(ep.GET_CURRENT_CHANNEL)
+        return await self.request(ep.EP_GET_CURRENT_CHANNEL)
 
     async def subscribe_current_channel(self, callback):
         """Subscribe to changes in the current tv channel."""
-        return await self.subscribe(callback, ep.GET_CURRENT_CHANNEL)
+        return await self.subscribe(callback, ep.EP_GET_CURRENT_CHANNEL)
 
     async def get_channel_info(self):
         """Get the current channel info."""
-        return await self.request(ep.GET_CHANNEL_INFO)
+        return await self.request(ep.EP_GET_CHANNEL_INFO)
 
     async def set_channel(self, channel):
         """Set the current channel."""
-        return await self.request(ep.SET_CHANNEL, {"channelId": channel})
+        return await self.request(ep.EP_SET_CHANNEL, {"channelId": channel})
 
     # Media control
     async def play(self):
         """Play media."""
-        return await self.request(ep.MEDIA_PLAY)
+        return await self.request(ep.EP_MEDIA_PLAY)
 
     async def pause(self):
         """Pause media."""
-        return await self.request(ep.MEDIA_PAUSE)
+        return await self.request(ep.EP_MEDIA_PAUSE)
 
     async def stop(self):
         """Stop media."""
-        return await self.request(ep.MEDIA_STOP)
+        return await self.request(ep.EP_MEDIA_STOP)
 
     async def close(self):
         """Close media."""
-        return await self.request(ep.MEDIA_CLOSE)
+        return await self.request(ep.EP_MEDIA_CLOSE)
 
     async def rewind(self):
         """Rewind media."""
-        return await self.request(ep.MEDIA_REWIND)
+        return await self.request(ep.EP_MEDIA_REWIND)
 
     async def fast_forward(self):
         """Fast Forward media."""
-        return await self.request(ep.MEDIA_FAST_FORWARD)
+        return await self.request(ep.EP_MEDIA_FAST_FORWARD)
 
     # Keys
     async def send_enter_key(self):
         """Send enter key."""
-        return await self.request(ep.SEND_ENTER)
+        return await self.request(ep.EP_SEND_ENTER)
 
     async def send_delete_key(self):
         """Send delete key."""
-        return await self.request(ep.SEND_DELETE)
+        return await self.request(ep.EP_SEND_DELETE)
 
     # Web
     async def open_url(self, url):
         """Open URL."""
-        return await self.request(ep.OPEN, {"target": url})
+        return await self.request(ep.EP_OPEN, {"target": url})
 
     async def close_web(self):
         """Close web app."""
-        return await self.request(ep.CLOSE_WEB_APP)
+        return await self.request(ep.EP_CLOSE_WEB_APP)
 
     # Emulated button presses
     async def left_button(self):
@@ -922,7 +922,7 @@ class WebOsClient:
             "picMode": picMode,
         }
 
-        return await self.request(ep.CALIBRATION, payload)
+        return await self.request(ep.EP_CALIBRATION, payload)
 
     async def start_calibration(self, picMode, data=DEFAULT_CAL_DATA):
         self.validateCalibrationData(data, (9,), np.float32)
@@ -1064,7 +1064,7 @@ class WebOsClient:
         self, keys=["contrast", "backlight", "brightness", "color"]
     ):
         payload = {"category": "picture", "keys": keys}
-        ret = await self.request(ep.GET_SYSTEM_SETTINGS, payload=payload)
+        ret = await self.request(ep.EP_GET_SYSTEM_SETTINGS, payload=payload)
         return ret["settings"]
 
     async def upload_1d_lut_from_file(self, picMode, filename):
