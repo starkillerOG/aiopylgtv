@@ -65,6 +65,7 @@ class WebOsClient:
         self._extinputs = {}
         self._system_info = None
         self._software_info = None
+        self._sound_output = None
         self.state_update_callbacks = []
         self.doStateUpdate = False
 
@@ -239,6 +240,7 @@ class WebOsClient:
                 self.subscribe_volume(self.set_volume_state),
                 self.subscribe_apps(self.set_apps_state),
                 self.subscribe_inputs(self.set_inputs_state),
+                self.subscribe_sound_output(self.set_sound_output_state),
             )
             # Channel state subscription may not work in all cases
             try:
@@ -283,6 +285,7 @@ class WebOsClient:
             self._extinputs = {}
             self._system_info = None
             self._software_info = None
+            self._sound_output = None
 
             self.doStateUpdate = True
 
@@ -358,6 +361,10 @@ class WebOsClient:
     @property
     def software_info(self):
         return self._software_info
+
+    @property
+    def sound_output(self):
+        return self._sound_output
 
     def calibration_support_info(self):
         info = {
@@ -463,6 +470,12 @@ class WebOsClient:
         self._extinputs = {}
         for extinput in extinputs:
             self._extinputs[extinput["appId"]] = extinput
+
+        if self.state_update_callbacks and self.doStateUpdate:
+            await self.do_state_update_callbacks()
+
+    async def set_sound_output_state(self, sound_output):
+        self._sound_output = sound_output
 
         if self.state_update_callbacks and self.doStateUpdate:
             await self.do_state_update_callbacks()
@@ -772,6 +785,23 @@ class WebOsClient:
     async def set_channel(self, channel):
         """Set the current channel."""
         return await self.request(ep.SET_CHANNEL, {"channelId": channel})
+
+    async def get_sound_output(self):
+        """Get the current audio output."""
+        res = await self.request(ep.GET_SOUND_OUTPUT)
+        return res.get("soundOutput")
+
+    async def subscribe_sound_output(self, callback):
+        """Subscribe to changes in current audio output."""
+
+        async def sound_output(payload):
+            await callback(payload.get("soundOutput"))
+
+        return await self.subscribe(sound_output, ep.GET_SOUND_OUTPUT)
+
+    async def change_sound_output(self, output):
+        """Change current audio output."""
+        return await self.request(ep.CHANGE_SOUND_OUTPUT, {"output": output})
 
     # Media control
     async def play(self):
