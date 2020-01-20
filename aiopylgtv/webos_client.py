@@ -897,6 +897,14 @@ class WebOsClient:
         """channel down button press."""
         await self.button(btn.CHANNELDOWN)
 
+    async def play_button(self):
+        """play button press."""
+        await self.button(btn.PLAY)
+
+    async def pause_button(self):
+        """pause button press."""
+        await self.button(btn.PAUSE)
+
     async def number_button(self, num):
         """numeric button press."""
         if not (num >= 0 and num <= 9):
