@@ -57,9 +57,10 @@ class WebOsClient:
         self.input_connection = None
         self.callbacks = {}
         self.futures = {}
-        self._current_appId = ""
-        self._muted = False
-        self._volume = 0
+        self._power_state = None
+        self._current_appId = None
+        self._muted = None
+        self._volume = None
         self._current_channel = None
         self._channel_info = None
         self._channels = None
@@ -237,6 +238,7 @@ class WebOsClient:
                 self.get_system_info(), self.get_software_info()
             )
             await asyncio.gather(
+                self.subscribe_power_state(self.set_power_state),
                 self.subscribe_current_app(self.set_current_app_state),
                 self.subscribe_muted(self.set_muted_state),
                 self.subscribe_volume(self.set_volume_state),
@@ -276,9 +278,10 @@ class WebOsClient:
 
             self.doStateUpdate = False
 
-            self._current_appId = ""
-            self._muted = False
-            self._volume = 0
+            self._power_state = None
+            self._current_appId = None
+            self._muted = None
+            self._volume = None
             self._current_channel = None
             self._channel_info = None
             self._channels = None
@@ -368,6 +371,10 @@ class WebOsClient:
                     pass
 
     # manage state
+    @property
+    def power_state(self):
+        return self._power_state
+
     @property
     def current_appId(self):
         return self._current_appId
@@ -479,6 +486,19 @@ class WebOsClient:
 
         if callbacks:
             await asyncio.gather(*callbacks)
+
+    async def set_power_state(self, payload):
+        self._power_state = payload.get("state")
+
+        # if standby+ is off, the actual state update will never come, so disconnect on the initial notification
+        if (
+            not self.standby_connection
+            and payload.get("processing") == "Request Power Off"
+        ):
+            await self.disconnect()
+
+        if self.state_update_callbacks and self.doStateUpdate:
+            await self.do_state_update_callbacks()
 
     async def set_current_app_state(self, appId):
         """Set current app state variable.  This function also handles subscriptions to current channel and channel list, since the current channel subscription can only succeed when Live TV is running, and the channel list subscription can only succeed after channels have been configured."""
@@ -679,6 +699,14 @@ class WebOsClient:
             },
         )
 
+    async def get_power_state(self):
+        """Get current power state."""
+        return await self.request(ep.GET_POWER_STATE)
+
+    async def subscribe_power_state(self, callback):
+        """Subscribe to current power state."""
+        return await self.subscribe(callback, ep.GET_POWER_STATE)
+
     # Apps
     async def get_apps(self):
         """Return all apps."""
@@ -736,21 +764,21 @@ class WebOsClient:
         """Return the system information."""
         return await self.request(ep.GET_SYSTEM_INFO)
 
-    async def power_off(self, disconnect=None):
+    async def power_off(self):
         """Power off TV."""
-        if disconnect is None:
-            disconnect = not self.standby_connection
 
-        if disconnect:
-            # if tv is shutting down and standby++ option is not enabled,
-            # response is unreliable, so don't wait for one,
-            # and force immediate disconnect
-            await self.command("request", ep.POWER_OFF)
-            await self.disconnect()
-        else:
-            # if standby++ option is enabled, connection stays open
+        # protect against turning tv back on if it is off
+        if self._power_state in [None, "Power Off", "Suspend", "Active Standby"]:
+            return
+
+        if self.standby_connection:
+            # if standby+ option is enabled, connection stays open
             # and TV responds gracefully to power off request
             return await self.request(ep.POWER_OFF)
+        else:
+            # if tv is shutting down and standby++ option is not enabled,
+            # response is unreliable, so don't wait for one,
+            await self.command("request", ep.POWER_OFF)
 
     async def power_on(self):
         """Play media."""
