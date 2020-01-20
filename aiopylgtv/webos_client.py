@@ -61,6 +61,8 @@ class WebOsClient:
         self._muted = False
         self._volume = 0
         self._current_channel = None
+        self._channel_info = None
+        self._channels = None
         self._apps = {}
         self._extinputs = {}
         self._system_info = None
@@ -242,11 +244,6 @@ class WebOsClient:
                 self.subscribe_inputs(self.set_inputs_state),
                 self.subscribe_sound_output(self.set_sound_output_state),
             )
-            # Channel state subscription may not work in all cases
-            try:
-                await self.subscribe_current_channel(self.set_current_channel_state)
-            except PyLGTVCmdException:
-                pass
             self.doStateUpdate = True
             if self.state_update_callbacks:
                 await self.do_state_update_callbacks()
@@ -277,17 +274,19 @@ class WebOsClient:
             self.connection = None
             self.input_connection = None
 
+            self.doStateUpdate = False
+
             self._current_appId = ""
             self._muted = False
             self._volume = 0
             self._current_channel = None
+            self._channel_info = None
+            self._channels = None
             self._apps = {}
             self._extinputs = {}
             self._system_info = None
             self._software_info = None
             self._sound_output = None
-
-            self.doStateUpdate = True
 
             for callback in self.state_update_callbacks:
                 closeout.add(callback())
@@ -315,19 +314,58 @@ class WebOsClient:
         ):
             pass
 
+    async def callback_handler(self, queue, callback, future):
+        try:
+            while True:
+                msg = await queue.get()
+                payload = msg.get("payload")
+                await callback(payload)
+                if future is not None and not future.done():
+                    future.set_result(msg)
+        except asyncio.CancelledError:
+            pass
+
     async def consumer_handler(self, ws, callbacks={}, futures={}):
+
+        callback_queues = {}
+        callback_tasks = {}
+
         try:
             async for raw_msg in ws:
                 if callbacks or futures:
                     msg = json.loads(raw_msg)
                     uid = msg.get("id")
-                    if uid in self.callbacks:
-                        payload = msg.get("payload")
-                        await self.callbacks[uid](payload)
-                    if uid in self.futures:
+                    callback = self.callbacks.get(uid)
+                    future = self.futures.get(uid)
+                    if callback is not None:
+                        if uid not in callback_tasks:
+                            queue = asyncio.Queue()
+                            callback_queues[uid] = queue
+                            callback_tasks[uid] = asyncio.create_task(
+                                self.callback_handler(queue, callback, future)
+                            )
+                        callback_queues[uid].put_nowait(msg)
+                    elif future is not None and not future.done():
                         self.futures[uid].set_result(msg)
+
         except (websockets.exceptions.ConnectionClosedError, asyncio.CancelledError):
             pass
+        finally:
+            for task in callback_tasks.values():
+                if not task.done():
+                    task.cancel()
+
+            tasks = set()
+            tasks.update(callback_tasks.values())
+
+            if tasks:
+                closeout_task = asyncio.create_task(asyncio.wait(tasks))
+
+            while not closeout_task.done():
+                try:
+                    await asyncio.shield(closeout_task)
+                except asyncio.CancelledError:
+                    pass
 
     # manage state
     @property
@@ -345,6 +383,14 @@ class WebOsClient:
     @property
     def current_channel(self):
         return self._current_channel
+
+    @property
+    def channel_info(self):
+        return self._channel_info
+
+    @property
+    def channels(self):
+        return self._channels
 
     @property
     def apps(self):
@@ -435,7 +481,20 @@ class WebOsClient:
             await asyncio.gather(*callbacks)
 
     async def set_current_app_state(self, appId):
+        """Set current app state variable.  This function also handles subscriptions to current channel and channel list, since the current channel subscription can only succeed when Live TV is running, and the channel list subscription can only succeed after channels have been configured."""
         self._current_appId = appId
+
+        if self._channels is None:
+            try:
+                await self.subscribe_channels(self.set_channels_state)
+            except PyLGTVCmdException:
+                pass
+
+        if appId == "com.webos.app.livetv" and self._current_channel is None:
+            try:
+                await self.subscribe_current_channel(self.set_current_channel_state)
+            except PyLGTVCmdException:
+                pass
 
         if self.state_update_callbacks and self.doStateUpdate:
             await self.do_state_update_callbacks()
@@ -452,8 +511,28 @@ class WebOsClient:
         if self.state_update_callbacks and self.doStateUpdate:
             await self.do_state_update_callbacks()
 
+    async def set_channels_state(self, channels):
+        self._channels = channels
+
+        if self.state_update_callbacks and self.doStateUpdate:
+            await self.do_state_update_callbacks()
+
     async def set_current_channel_state(self, channel):
+        """Set current channel state variable.  This function also handles the channel info subscription, since that call may fail if channel information is not available when it's called."""
+
         self._current_channel = channel
+
+        if self._channel_info is None:
+            try:
+                await self.subscribe_channel_info(self.set_channel_info_state)
+            except PyLGTVCmdException:
+                pass
+
+        if self.state_update_callbacks and self.doStateUpdate:
+            await self.do_state_update_callbacks()
+
+    async def set_channel_info_state(self, channel_info):
+        self._channel_info = channel_info
 
         if self.state_update_callbacks and self.doStateUpdate:
             await self.do_state_update_callbacks()
@@ -766,9 +845,17 @@ class WebOsClient:
         return await self.request(ep.TV_CHANNEL_DOWN)
 
     async def get_channels(self):
-        """Get all tv channels."""
+        """Get list of tv channels."""
         res = await self.request(ep.GET_TV_CHANNELS)
         return res.get("channelList")
+
+    async def subscribe_channels(self, callback):
+        """Subscribe to list of tv channels."""
+
+        async def channels(payload):
+            await callback(payload.get("channelList"))
+
+        return await self.subscribe(channels, ep.GET_TV_CHANNELS)
 
     async def get_current_channel(self):
         """Get the current tv channel."""
@@ -781,6 +868,10 @@ class WebOsClient:
     async def get_channel_info(self):
         """Get the current channel info."""
         return await self.request(ep.GET_CHANNEL_INFO)
+
+    async def subscribe_channel_info(self, callback):
+        """Subscribe to current channel info."""
+        return await self.subscribe(callback, ep.GET_CHANNEL_INFO)
 
     async def set_channel(self, channel):
         """Set the current channel."""
