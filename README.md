@@ -4,17 +4,17 @@ Library to control webOS based LG Tv devices.
 Based on pylgtv library at https://github.com/TheRealLink/pylgtv which is no longer maintained.
 
 ## Requirements
-- Python >= 3.8
+- Python >= 3.7
 
 ## Install
-```
+```bash
 pip install aiopylgtv
 ```
 
 ## Install from Source
-```
-python setup.py sdist bdist_wheel
-pip install --upgrade dist/aiopylgtv-0.2.1-py3-none-any.whl
+Run the following command inside this folder
+```bash
+pip install --upgrade .
 ```
 
 ## Basic Example
@@ -28,16 +28,16 @@ async def runloop(client):
     apps = await client.get_apps()
     for app in apps:
         print(app)
-    
+
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')            
+client = WebOsClient('192.168.1.53')
 asyncio.get_event_loop().run_until_complete(runloop(client))
 ```
 
 ## Subscribed state updates
 A callback coroutine can be registered with the client in order to be notified of any state changes.
-```
+```python
 import asyncio
 from aiopylgtv import WebOsClient
 
@@ -51,20 +51,20 @@ async def on_state_change():
     print(client.inputs)
     print(client.system_info)
     print(client.software_info)
-    
+
 
 async def runloop():
     await client.register_state_update_callback(on_state_change)
-    
+
     await client.connect()
-    
+
     print(client.inputs)
     ret = await client.set_input("HDMI_3")
     print(ret)
-    
+
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')            
+client = WebOsClient('192.168.1.53')
 asyncio.get_event_loop().run_until_complete(runloop())
 ```
 
@@ -74,16 +74,16 @@ All of the currently implemented functions SHOULD be safe, but no guarantees.
 
 On supported models, calibration functionality and upload to internal LUTs is supported.  The supported input formats for LUTs are IRIDAS .cube format for both 1D and 3D LUTs, and ArgyllCMS .cal files for 1D LUTs.
 
-Not yet supported:  
--Dolby Vision config upload  
+Not yet supported:
+-Dolby Vision config upload
 -Custom tone mapping for 2019 models (functionality does not exist on 2018 models)
 
-Supported models:  
-LG 2019 Alpha 9 G2 OLED R9 Z9 W9 W9S E9 C9 NanoCell SM99  
-LG 2019 Alpha 7 G2 NanoCell (8000 & higher model numbers)  
-LG 2018 Alpha 7 Super UHD LED (8000 & higher model numbers)  
-LG 2018 Alpha 7 OLED B8  
-LG 2018 Alpha 9 OLED C8 E8 G8 W8  
+Supported models:
+LG 2019 Alpha 9 G2 OLED R9 Z9 W9 W9S E9 C9 NanoCell SM99
+LG 2019 Alpha 7 G2 NanoCell (8000 & higher model numbers)
+LG 2018 Alpha 7 Super UHD LED (8000 & higher model numbers)
+LG 2018 Alpha 7 OLED B8
+LG 2018 Alpha 9 OLED C8 E8 G8 W8
 
 Models with Alpha 9 use 33 point 3D LUTs, while those with Alpha 7 use 17 points.
 
@@ -116,14 +116,13 @@ Calibration commands can only be run while in calibration mode (controlled by "s
 While in calibration mode for HDR10 tone mapping is bypassed.
 There may be other not fully known/understood changes in the image processing pipeline while in calibration mode.
 
-
-```
+```python
 import asyncio
 from aiopylgtv import WebOsClient
 
 async def runloop():
     await client.connect()
-    
+
     await client.set_input("HDMI_2")
     await client.start_calibration(picMode = "expert1")
     await client.ddc_reset(picMode = "expert1")
@@ -133,9 +132,17 @@ async def runloop():
     await client.upload_3d_lut_bt709_from_file(picMode = "expert1", filename = "test3d.cube")
     await client.upload_3d_lut_bt2020_from_file(picMode = "expert1", filename = "test3d.cube")
     await client.end_calibration(picMode = "expert1")
-    
+
     await client.disconnect()
 
-client = WebOsClient('192.168.1.53')            
+client = WebOsClient('192.168.1.53')
 asyncio.get_event_loop().run_until_complete(runloop())
 ```
+
+## Development of `aiopylgtv`
+
+We use [`pre-commit`](https://pre-commit.com) to keep a consistent code style, so ``pip install pre_commit`` and run
+```bash
+pre-commit install
+```
+to install the hooks.
