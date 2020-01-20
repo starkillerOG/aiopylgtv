@@ -5,10 +5,9 @@ import json
 import logging
 import os
 
+import endpoints as ep
 import numpy as np
 import websockets
-
-import endpoints as ep
 
 from .constants import CALIBRATION_TYPE_MAP, DEFAULT_CAL_DATA
 from .handshake import REGISTRATION_MESSAGE
