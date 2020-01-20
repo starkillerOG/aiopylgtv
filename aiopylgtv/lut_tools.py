@@ -89,7 +89,7 @@ def read_cube_file(filename):  # noqa: C901
     if domain_max is None:
         domain_max = np.ones((1, 3), dtype=np.float64)
 
-    lut = np.genfromtxt(filename, skip_header=nheader, comments="#", dtype=np.float64)
+    lut = np.genfromtxt(lines[nheader:], comments="#", dtype=np.float64)
     if np.amin(lut) < -1e37 or np.amax(lut) > 1e37:
         raise ValueError("Invalid value in DOMAIN_MAX, must be in range [-1e37,1e37].")
 
